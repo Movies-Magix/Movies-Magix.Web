@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang='en'>
+<head>
+	<meta charset='UTF-8'>
+	<script src="Scripts/Zepto-Min.js"></script>
+	<script src="Scripts/Controller.js"></script>
+	<link rel="stylesheet" href="Styles/Global.css">
+	<link rel="stylesheet" href="Styles/UI-Design.css">
+	<meta name='viewport' content='width=device-width, initial-scale=1.0'>
+	<title>Unlimited Free & Fastest Movies Streaming > Movies-Magix</title>
+</head>
+<!-- https://www.geeksforgeeks.org/what-is-http-etag/ -->
+<body theme='blackhole'>
+	<div class="anim-bg">
+		<div class="loop-holder">
+			<div class="loader"></div>
+			<b class="load-text">loading</b>
+		</div>
+		<div class="error">
+			<b class="title">Pageload Timed Out!</b>
+			<p>
+				<b>Oops!</b> an error was encountered while we are trying to load the page.
+				This might have happened because you either have lost your internet connectivity or your network connection is very slow.
+				<data id="refresh-notice"><small>[Page will be reloaded after 30 seconds.]</small></data>
+				<u class="lspace"><br></u><a class="stopr" onclick="IsAutoReloadDisabled = true;">Click Here to stop auto reload.</a>
+			</p>
+			<a class="rnow" onclick="location.reload();">Reloading the page in <b class="countdown">30s</b>.<br>Click here to reload now!</a>
+		</div>
+	</div>
+	<div id="popup-msg" onclick="HideMe();" type="warning">
+		<div class="msg-box">
+			<b class="popup-ctrl"></b>
+			<p class="popup-ctrl"></p>
+			<button class="popup-ctrl" onclick="$('div#popup-msg').trigger('hide-me');"></button>
+		</div>
+	</div>
+	<div id="pop-box" class>
+		<span onclick="$('#pop-box').removeClass('display');">
+			<span style="--dir: 1;"></span>
+			<span style="--dir: -1;"></span>
+		</span>
+		<div class="settings active">
+			<b>User Settings</b>
+			<hr class="h">
+			<div class="area">
+				<span class="topic">Change Your Password</span>
+				<input class="dsg" type="password" placeholder="Enter A New Password!">
+			</div><hr>
+			<div class="area">
+				<span class="topic">Choose A Theme</span>
+				<div class="sec-bar" pos="2">
+					<div></div>
+					<span>Killer</span>
+					<span>Blackhole</span>
+					<span>Natural</span>
+				</div>
+			</div><hr>
+			<div class="area">
+				<span class="topic">Select Video Behaviour</span>
+				<div class="sec-bar" pos="2">
+					<div></div>
+					<span>No Load</span>
+					<span>Pre Load</span>
+					<span>Auto Play</span>
+				</div>
+			</div><hr>
+		</div>
+		<div class="report">
+			<b>Report An Error</b>
+			<hr class="h">
+			<div class="area">
+				<span class="topic">Where's The Issue?</span>
+				<div class="sec-bar" pos="3">
+					<div></div>
+					<span>UI Design</span>
+					<span>In Video</span>
+					<span>Others</span>
+				</div>
+			</div><hr>
+			<div class="area">
+				<span class="topic">Subject (Required)</span>
+				<input class="dsg" type="text" placeholder="Give A Name To This Problem">
+			</div><hr>
+			<div class="area">
+				<span class="topic">Briefly Describe The Issue</span>
+				<input class="dsg" type="text" placeholder="This Is Required Field">
+			</div><hr>
+		</div>
+		<div class="request">
+			<b>Request A Movie</b>
+			<hr class="h">
+			<div class="area">
+				<span class="topic">Movie Name (Required)</span>
+				<input class="dsg" type="text" placeholder="Enter Movie Title">
+			</div><hr>
+			<div class="area">
+				<span class="topic">IMDB Link (Required)</span>
+				<input class="dsg" type="text" placeholder="Enter Valid IMDB URL">
+			</div><hr>
+			<div class="area">
+				<span class="topic">Anything Else? (Optional)</span>
+				<input class="dsg" type="text" placeholder="Your thoughts if any!">
+			</div><hr>
+		</div>
+	</div>
+	<header>
+		<a onclick="LogoTap()" class="logo"><img alt="Website Logo" src="Icon.png">Movies - Magix</a>
+		<b class="subhead">
+			Movies at your fingertips!
+			<b class="author">By RISHABH KUMAR</b>
+		</b>
+	</header>
+	<div id="stick-menu">
+		<span style="--delay: 0.42s" class="hidden">Goto Homepage</span>
+		<span style="--delay: 0.34s" onclick="ShowModal(1);">Report An Error</span>
+		<span style="--delay: 0.26s" onclick="ShowModal(2);">Request A Movie</span>
+		<span style="--delay: 0.18s" onclick="ShowModal(0);">User Settings</span>
+		<span style="--delay: 0.10s">Logout</span>
+	</div>
+	<div id="sm-on-off" onclick="$('#stick-menu').toggleClass('show');">
+		<span style="--dir: 1;"></span>
+		<span style="--dir: -1;"></span>
+	</div>
+	<div class="body-content">
+		<div class="section login" id="auth-page">
+			<form class="login-frm" onsubmit="HandleSubmission(true, event);">
+				<b>Login To Proceed</b>
+				<p>Private access is required, login first to access it's services.</p>
+				<input class="dsg" type="email" id="l-email" tabindex="1" placeholder="Enter Email" required/>
+				<input class="dsg" type="password" id="l-pwd" tabindex="2" placeholder="Your Password" required/>
+				<button tabindex="3" type="submit">LOGIN NOW</button>
+				<a onclick="$('#auth-page').removeClass('login');">OR Register Here</a>
+			</form>
+			<form class="register-frm" onsubmit="HandleSubmission(false, event);">
+				<b>Register To Continue</b>
+				<p>Registration is secured with an access code ask owner for more details.</p>
+				<input class="dsg" type="text" tabindex="1" id="r-name" placeholder="Enter Your Name" required/>
+				<input class="dsg" type="email" id="r-email" tabindex="2" placeholder="Enter Your Email" required/>
+				<input class="dsg" type="password" id="r-pwd" tabindex="3" placeholder="Create A New Password" required/>
+				<input class="dsg" type="password" id="r-cf-pwd" tabindex="4" placeholder="Confirm The Password" required/>
+				<input class="dsg" type="text" id="r-access" tabindex="5" placeholder="Enter The Access Code" required/>
+				<button type="submit" tabindex="6">REGISTER NOW</button>
+				<a onclick="$('#auth-page').addClass('login');">OR Login Here</a>
+			</form>
+		</div>
+		<div class="section show" id="index-page">
+			<div class="wrapper">
+				<div class="cat" onclick="ThrowDialog(this, 'Kids');"><img alt="Kids Poster Image" src="Images/Kids_Pic.jpg"/>
+					<div class="further">
+						<b>Entertainment World</b>
+						<b>Click To Load Movies</b>
+					</div>
+				</div>
+				<div class="cat" onclick="ThrowDialog(this, 'Kids');"><img alt="Kids Poster Image" src="Images/Kids_Pic.jpg"/>
+					<div class="further">
+						<b>Entertainment World</b>
+						<b>Click To Load Movies</b>
+					</div>
+				</div>
+				<div class="cat" onclick="ThrowDialog(this, 'Kids');"><img alt="Kids Poster Image" src="Images/Kids_Pic.jpg"/>
+					<div class="further">
+						<b>Entertainment World</b>
+						<b>Click To Load Movies</b>
+					</div>
+				</div>
+				<div class="cat" onclick="ThrowDialog(this, 'Kids');"><img alt="Kids Poster Image" src="Images/Kids_Pic.jpg"/>
+					<div class="further">
+						<b>Entertainment World</b>
+						<b>Click To Load Movies</b>
+					</div>
+				</div>
+				<div class="cat" onclick="ThrowDialog(this, 'Kids');"><img alt="Kids Poster Image" src="Images/Kids_Pic.jpg"/>
+					<div class="further">
+						<b>Entertainment World</b>
+						<b>Click To Load Movies</b>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div class="section" id="list-page">
+			<div class="ctrl-container"></div>
+			<div class="mov-container"></div>
+		</div>
+		<div class="section" id="watch-page">
+
+		</div>
+	</div>
+	<footer>
+		Made with&nbsp;
+		<svg width="20" height="20" viewBox="0 -10 497 470" id='heart'>
+		<path d="M140 20C73 20 20 74 20 140c0 135 136 170 228 303 88-132 229-173 229-303 0-66-54-120-120-120-48 0-90 28-109 69-19-41-60-69-108-69z" stroke-width="50" fill="none"/><defs><radialGradient id="radialGradient" cx="50%" cy="50%" r="100%" gradientUnits="objectBoundingBox"><stop offset="1%" style="stop-color:rgb(255, 150, 150); stop-opacity:1"></stop><stop offset="90%" style="stop-color:rgb(255, 0, 0); stop-opacity:1"></stop><stop offset="100%" style="stop-color:rgb(208, 46, 46); stop-opacity:1"></stop></radialGradient></defs><style type="text/css">#heart{stroke:url(#radialGradient);}</style></svg>&nbsp;In&nbsp;<svg viewBox="0 0 225 150" width="30" height="20" id='tri-color'><rect width="225" height="150" fill="#f93"/><rect width="225" height="50" y="50" fill="#fff"/><rect width="225" height="50" y="100" fill="#128807"/><g transform="translate(112.5,75)"><circle r="20" fill="#008"/><circle r="17.5" fill="#fff"/><circle r="3.5" fill="#008"/><g id="d"><g id="c"><g id="b"><g id="a"><circle r="0.875" fill="#008" transform="rotate(7.5) translate(17.5)"/><path fill="#008" d="M 0,17.5 0.6,7 C 0.6,7 0,2 0,2 0,2 -0.6,7 -0.6,7 L 0,17.5 z"/></g><use xlink:href="#a" transform="rotate(15)"/></g><use xlink:href="#b" transform="rotate(30)"/></g><use xlink:href="#c" transform="rotate(60)"/></g><use xlink:href="#d" transform="rotate(120)"/><use xlink:href="#d" transform="rotate(-120)"/></g></svg>
+	</footer>
+</body>
+</html>
