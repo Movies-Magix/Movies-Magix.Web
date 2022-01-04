@@ -6,11 +6,12 @@
 	<script src="Scripts/Controller.js"></script>
 	<link rel="stylesheet" href="Styles/Global.css">
 	<link rel="stylesheet" href="Styles/UI-Design.css">
-	<meta name='viewport' content='width=device-width, initial-scale=1.0'>
-	<title>Unlimited Free & Fastest Movies Streaming > Movies-Magix</title>
+	<link rel="shortcut icon" href="Icon.png" type="image/png">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>Unlimited Free & Fastest Movies Streaming || Movies-Magix</title>
 </head>
 <!-- https://www.geeksforgeeks.org/what-is-http-etag/ -->
-<body theme='blackhole'>
+<body theme='killer'>
 	<div class="anim-bg">
 		<div class="loop-holder">
 			<div class="loader"></div>
@@ -143,7 +144,7 @@
 				<a onclick="$('#auth-page').addClass('login');">OR Login Here</a>
 			</form>
 		</div>
-		<div class="section show" id="index-page">
+		<div class="section" id="index-page">
 			<div class="wrapper">
 				<div class="cat" onclick="ThrowDialog(this, 'Kids');"><img alt="Kids Poster Image" src="Images/Kids_Pic.jpg"/>
 					<div class="further">
@@ -178,17 +179,58 @@
 			</div>
 		</div>
 		<div class="section" id="list-page">
-			<div class="ctrl-container"></div>
-			<div class="mov-container"></div>
+			<div class="catg">Category Name Here</div>
+			<div class="movs">
+				<div class="movie-card active" onclick="Watch(this, 1)">
+				<img class="img-top" src="https://s3.movies-magix.ml/kids-mmx/The-Angry-Birds.jpg" alt="Movie Poster Image"><progress class="" max="100" value="31.23"></progress><div class="mv-info"><b class="lang">Hindi</b><b class="age-rate">3+ </b></div><span class="mv-title">The Angry Birds</span></div>
+			</div>
 		</div>
-		<div class="section" id="watch-page">
-
+		<div class="section show" id="watch-page">
+			<section class="wrapper">
+				<section class="top-title">
+					<h2 class="mov-title">Sample Movie Title Will Go Here</h2>
+				</section>
+				<section class="player-wrapper">
+					<div class="video-container">
+						<div class="vid-container">
+							<video class="player" playsinline controls data-poster="path-to-poster.jpg">
+								<source src="path-to-video.mp4" type="video/mp4">
+							</video>
+						</div>
+					</div>
+				</section>
+				<div class="mov-dets">
+					<section class="descp">
+						<b>Quick Movie Description</b><hr>
+						<p>Movie Description Here</p>
+					</section>
+					<section class="infos">
+						<div class="meta-a">
+							<p>120.00&nbsp;<b>Min</b>
+							</p><p>English</p>
+							<p>431.07&nbsp;<b>MB</b></p>
+						</div><hr>
+						<div class="meta-b">
+							<p><i>Released On:</i>&nbsp;</p>
+							<p><i>Rated For:</i>&nbsp;</p>
+							<data class="download-btn">
+								<a class="downloader" type="video/mp4">
+									<span>Download Now</span>
+									<div class="liquid"></div>
+								</a>
+							</data>
+						</div>
+					</section>
+				</div>
+			</section>
+			<iframe name="downFrame" style="display: none;" id="mdown-holder"></iframe>
 		</div>
 	</div>
 	<footer>
 		Made with&nbsp;
 		<svg width="20" height="20" viewBox="0 -10 497 470" id='heart'>
-		<path d="M140 20C73 20 20 74 20 140c0 135 136 170 228 303 88-132 229-173 229-303 0-66-54-120-120-120-48 0-90 28-109 69-19-41-60-69-108-69z" stroke-width="50" fill="none"/><defs><radialGradient id="radialGradient" cx="50%" cy="50%" r="100%" gradientUnits="objectBoundingBox"><stop offset="1%" style="stop-color:rgb(255, 150, 150); stop-opacity:1"></stop><stop offset="90%" style="stop-color:rgb(255, 0, 0); stop-opacity:1"></stop><stop offset="100%" style="stop-color:rgb(208, 46, 46); stop-opacity:1"></stop></radialGradient></defs><style type="text/css">#heart{stroke:url(#radialGradient);}</style></svg>&nbsp;In&nbsp;<svg viewBox="0 0 225 150" width="30" height="20" id='tri-color'><rect width="225" height="150" fill="#f93"/><rect width="225" height="50" y="50" fill="#fff"/><rect width="225" height="50" y="100" fill="#128807"/><g transform="translate(112.5,75)"><circle r="20" fill="#008"/><circle r="17.5" fill="#fff"/><circle r="3.5" fill="#008"/><g id="d"><g id="c"><g id="b"><g id="a"><circle r="0.875" fill="#008" transform="rotate(7.5) translate(17.5)"/><path fill="#008" d="M 0,17.5 0.6,7 C 0.6,7 0,2 0,2 0,2 -0.6,7 -0.6,7 L 0,17.5 z"/></g><use xlink:href="#a" transform="rotate(15)"/></g><use xlink:href="#b" transform="rotate(30)"/></g><use xlink:href="#c" transform="rotate(60)"/></g><use xlink:href="#d" transform="rotate(120)"/><use xlink:href="#d" transform="rotate(-120)"/></g></svg>
+		<path d="M140 20C73 20 20 74 20 140c0 135 136 170 228 303 88-132 229-173 229-303 0-66-54-120-120-120-48 0-90 28-109 69-19-41-60-69-108-69z" stroke-width="50" fill="none"/><defs><radialGradient id="radialGradient" cx="50%" cy="50%" r="100%" gradientUnits="objectBoundingBox"><stop offset="1%" style="stop-color:rgb(255, 150, 150); stop-opacity:1"></stop><stop offset="90%" style="stop-color:rgb(255, 0, 0); stop-opacity:1"></stop><stop offset="100%" style="stop-color:rgb(208, 46, 46); stop-opacity:1"></stop></radialGradient></defs>
+		<style type="text/css">#heart{stroke:url(#radialGradient);}</style></svg>&nbsp;In&nbsp;<svg viewBox="0 0 225 150" width="30" height="20" id='tri-color'><rect width="225" height="150" fill="#f93"/><rect width="225" height="50" y="50" fill="#fff"/><rect width="225" height="50" y="100" fill="#128807"/><g transform="translate(112.5,75)"><circle r="20" fill="#008"/><circle r="17.5" fill="#fff"/><circle r="3.5" fill="#008"/><g id="d"><g id="c"><g id="b"><g id="a"><circle r="0.875" fill="#008" transform="rotate(7.5) translate(17.5)"/><path fill="#008" d="M 0,17.5 0.6,7 C 0.6,7 0,2 0,2 0,2 -0.6,7 -0.6,7 L 0,17.5 z"/></g><use xlink:href="#a" transform="rotate(15)"/></g><use xlink:href="#b" transform="rotate(30)"/></g><use xlink:href="#c" transform="rotate(60)"/></g><use xlink:href="#d" transform="rotate(120)"/><use xlink:href="#d" transform="rotate(-120)"/></g></svg>
 	</footer>
 </body>
 </html>
