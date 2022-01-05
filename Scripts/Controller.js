@@ -2,6 +2,7 @@ ErStr = '';
 PageIndex = -1;
 FetchParam = '';
 GlobTrigger = null;
+TempSvURL = 'https://auth.movies-magix.workers.dev/';
 
 $(document).ready(function()
 {
@@ -151,8 +152,9 @@ function FallbackHandler()
 	}
 }
 
-function StartAnimation()
+function StartAnimation(DefTxt = 'Loading')
 {
+	$('.anim-bg .load-text').text(DefTxt);
 	setTimeout(function() {
 		$("div.anim-bg").css('transform', 'translateY' + '(0%)');
 		$("div.anim-bg").removeClass('timeout');
@@ -183,3 +185,75 @@ function StopAnimation()
 		if (!$('.anim-bg').hasClass('loaded')) $('.anim-bg').addClass('loaded');
 	}, 500);
 }
+
+// Start Auth-Page Functions
+
+function HandleSubmission(IsLogin, Evt)
+{
+	Evt.preventDefault(); let Postable = { };
+	const UEm = $(IsLogin ? '#l-email' : '#r-email').val(), UNm = $('#r-name').val(), Acc = $('#r-access').val(), UCfPwd = $('#r-cf-pwd').val(), UPwd = $(IsLogin ? '#l-pwd' : '#r-pwd').val(), RegExEmail = new RegExp(/^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/), RegExPass = new RegExp(/^(?=.*\d)(?=.*[a-zA-Z]).{8,64}$/);
+
+	if (!RegExEmail.test(UEm))
+	{
+		DisplayPopup("Invalid Email", "The email address you entered is in invalid format.<br>Kindly re check the field value and rectify the error.", "Okay", 1);
+		return;
+	}
+
+	if (!IsLogin && !RegExPass.test(UPwd))
+	{
+		DisplayPopup("Weak Password", "The password you entered doesn't meet security standards.<br>Please ensure that it's length is between 8 to 64 characters and contains a combination of both numbers and alphabets.", "Okay", 1);
+		return;
+	}
+	
+	if (IsLogin) Postable = { Email: UEm, Pass: UPwd };
+	else
+	{
+		if (UNm.length > 20 || UNm.length < 4)
+		{
+			DisplayPopup("Naming Error", "Range of Name field is invalid, Kindlly check to make sure that your name is at least 4 characters long and must not exceed more than 20 characters in total.", "Okay", 1);
+			return;
+		}
+		
+		if (UPwd !== UCfPwd)
+		{
+			DisplayPopup("Password Mismatch", "Confirm password field doesn't match with the Password field, please note that passwords are case sensitive so check for the issue and then try again!", "Okay", 1);
+			return;
+		}
+
+		Postable = { Name: UNm, Email: UEm, Pass: UPwd, Access: Acc };
+	}
+
+	const Canceller = new AbortController(),
+	ReqInit = {
+		method: 'POST',
+		signal: Canceller.signal,
+		body: JSON.stringify(Postable),
+		headers: { "content-type": "application/json" }
+	};
+
+	setTimeout(() => { Canceller.abort(); }, 5000);
+	StartAnimation(IsLogin ? 'Verifying' : 'Creating');
+	fetch(TempSvURL + (IsLogin ? 'Login' : 'Register'), ReqInit)
+		.then(async function(AuthRes)
+		{
+			const JResp = await AuthRes.json();
+
+			if (!JResp.Success)
+			{
+				StopAnimation();
+				DisplayPopup(JResp.Title, JResp.Reason, "Okay", 2);
+			}
+			else
+			{
+				
+			}
+		})
+		.catch(function(E)
+		{
+			console.log(E);
+			StopAnimation();
+			DisplayPopup("Network Issue", "It looks like your internet connection is unstable, kindly check to make sure that your mobile data is on or you are connected to a Wi-Fi network & then try again",  "Okay", 2);
+		});
+}
+
+// Ends Auth-Page Functions

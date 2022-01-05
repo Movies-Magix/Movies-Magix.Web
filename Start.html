@@ -112,13 +112,14 @@
 		</b>
 	</header>
 	<div id="stick-menu">
-		<span style="--delay: 0.42s" class="hidden">Goto Homepage</span>
-		<span style="--delay: 0.34s" onclick="ShowModal(1);">Report An Error</span>
-		<span style="--delay: 0.26s" onclick="ShowModal(2);">Request A Movie</span>
-		<span style="--delay: 0.18s" onclick="ShowModal(0);">User Settings</span>
-		<span style="--delay: 0.10s">Logout</span>
+		<span style="--delay: 0.48s" class="hidden">Goto Homepage</span>
+		<span style="--delay: 0.40s" class="hidden">Download Movie</span>
+		<span style="--delay: 0.32s" onclick="ShowModal(1);">Report An Error</span>
+		<span style="--delay: 0.24s" onclick="ShowModal(2);">Request A Movie</span>
+		<span style="--delay: 0.16s" onclick="ShowModal(0);">User Settings</span>
+		<span style="--delay: 0.08s">Logout</span>
 	</div>
-	<div id="sm-on-off" onclick="$('#stick-menu').toggleClass('show');">
+	<div id="sm-on-off" class="" onclick="$('#stick-menu').toggleClass('show');">
 		<span style="--dir: 1;"></span>
 		<span style="--dir: -1;"></span>
 	</div>
@@ -193,8 +194,8 @@
 				<section class="player-wrapper">
 					<div class="video-container">
 						<div class="vid-container">
-							<video class="player" playsinline controls data-poster="path-to-poster.jpg">
-								<source src="path-to-video.mp4" type="video/mp4">
+							<video class="player" playsinline controls data-poster="">
+								<source src="" type="video/mp4">
 							</video>
 						</div>
 					</div>
@@ -205,20 +206,13 @@
 						<p>Movie Description Here</p>
 					</section>
 					<section class="infos">
-						<div class="meta-a">
-							<p>120.00&nbsp;<b>Min</b>
-							</p><p>English</p>
-							<p>431.07&nbsp;<b>MB</b></p>
-						</div><hr>
-						<div class="meta-b">
-							<p><i>Released On:</i>&nbsp;</p>
-							<p><i>Rated For:</i>&nbsp;</p>
-							<data class="download-btn">
-								<a class="downloader" type="video/mp4">
-									<span>Download Now</span>
-									<div class="liquid"></div>
-								</a>
-							</data>
+						<b>Movie Details</b><hr>
+						<div class="meta">
+							<p><i>Language:</i>&nbsp;English</p>
+							<p><i>Video Size:</i>&nbsp;458.90 MB</p>
+							<p><i>Duration:</i>&nbsp;120.00 Mins</p>
+							<p><i>Rated For:</i>&nbsp;13+ (Guidance)</p>
+							<p><i>Released On:</i>&nbsp;85th AAA 2021</p>
 						</div>
 					</section>
 				</div>
