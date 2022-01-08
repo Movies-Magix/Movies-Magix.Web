@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang='en'>
+<head>
+    <meta charset='UTF-8'>
+    <meta http-equiv='X-UA-Compatible' content='ie=edge'>
+    <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+    <title>Compartibility-Test</title>
+</head>
+<body>
+    <img src="Kids_Pic.jpg" alt="Poster">
+    <button onclick="PutNewCache({IsWorking:true, Text:'Sample Message'}, '/Meta');">Set</button>
+    <button onclick="GetCachedData('/Meta').then(DATA => alert(JSON.stringify(DATA)));">Get</button>
+    <script>
+    async function GetCachedData(CacheUrl)
+    {
+        const CacheStorg = await caches.open('mmx-json-cache');
+        const CachedResp = await CacheStorg.match(CacheUrl);
+        if (CachedResp && CachedResp.ok)
+        return await CachedResp.json();
+        else return false;
+    }
+
+    async function PutNewCache(CacheOBJ, CacheLoc)
+    {
+        const CacheStorg = await caches.open('mmx-json-cache');
+        await CacheStorg.put(CacheLoc, new Response(JSON.stringify(CacheOBJ), {
+            headers: { 'content-type':'application/json' }
+        }));
+    }
+    </script>
+</body>
+</html>

@@ -1,8 +1,12 @@
 ErStr = '';
+SecParam = '';
 PageIndex = -1;
-FetchParam = '';
+FirstLoad = true;
+IsLogged = false;
+PrevHisState = '';
 GlobTrigger = null;
-TempSvURL = 'https://auth.movies-magix.workers.dev/';
+PreventLoop = false;
+IsNavReffered = false;
 
 $(document).ready(function()
 {
@@ -16,31 +20,111 @@ $(document).ready(function()
 	$('#stick-menu > span').on("click", function() { $('#stick-menu').removeClass('show'); });
 });
 
-$(window).trigger('popstate');
-setTimeout(() => { StopAnimation(); }, 2000);
+setTimeout(() => { $(window).trigger('popstate'); }, 1000);
 $(window).on("scroll", function() { $('header').toggleClass('sticky', window.scrollY > 20); });
 
 $(window).on("popstate", function()
 {
-	var SecID = -1, LocHsh = location.hash, SecHsh = LocHsh.split('/');
-	if (LocHsh.indexOf('/') < 0 || SecHsh.length == 1 || SecHsh[1] == "Home") SecID = 0;
+	var InitTxt = $('div#pre-auth').text(), Errored = false;
+	SecID = -1, LocHsh = location.hash, SecHsh = LocHsh.split('/');
+
+	if (InitTxt)
+	{
+		$('div#pre-auth').remove();
+		InitData = JSON.parse(InitTxt);
+		IsLogged = InitData.IsIn && !InitData.Blocked;
+	}
+
+	if (!IsLogged) { Visit(0); FirstLoad = true; return; }
+	if (LocHsh.indexOf('/') < 0 || SecHsh.length == 1 || SecHsh[1] == "Home") SecID = 1;
+	else if (SecHsh[1] == "List")
+	{
+		if (SecHsh.length == 3)
+		{
+			SecParam = SecHsh[2];
+			SecID = 2;
+		}
+		else Errored = true;
+	}
 	else if (SecHsh[1] == "Watch")
 	{
 		if (SecHsh.length == 4)
 		{
-			FetchParam = "&movCat=" + encodeURIComponent(SecHsh[2])
-			+ "&movID=" + encodeURIComponent(SecHsh[3]);
-			SecID = 1;
+			SecParam = SecHsh[2] + '/' + SecHsh[3];
+			SecID = 3;
 		}
-		else SecID = 0;
+		else Errored = true;
 	}
+	else Errored = true;
+
+	if (Errored)
+	{
+		DisplayPopup('Invalid Location', 'You are trying to visit a non-existing or invalid url. Please double check your entered address and then try again!', 'Okay', 1); SecID = 1;
+		
+		if (!FirstLoad)
+		{
+			history.back();
+			history.replaceState('', PrevHisState, '#/' + PrevHisState); return;
+		}
+	}
+	else PrevHisState = LocHsh.replace('#/', '');
 
 	if (SecID != PageIndex)
 	{
 		IsNavReffered = true;
-		LoadPage(SecID);
+		LoadPg(SecID).then();
+		$('#sm-on-off').removeClass('hide');
 	}
 });
+
+async function LoadPg(PId)
+{
+	if (!PreventLoop && FirstLoad) InitHomePg(InitData, PId == 1, PId);
+	else
+	{
+		switch (PId)
+		{
+			case 0:
+				//Create Destruct function for Home-Page, List-Page, Watch-Page and invoke it then call Visit
+				break;
+
+			case 2: // List-Page
+				
+				let CchMeta = await GetCachedData('/Meta'),
+				ReqCateg = SecParam;
+				
+				if (CchMeta && CchMeta[ReqCateg])
+				{
+					//
+				}
+				break;
+
+			case 3: // Watch-Page
+				
+				break;
+		}
+
+		Visit(PId);
+		setTimeout(() => { StopAnimation(); }, 1000);
+	}
+}
+
+async function GetCachedData(CacheUrl)
+{
+	const CacheStorg = await caches.open('mmx-json-cache');
+	const CachedResp = await CacheStorg.match(CacheUrl);
+	if (CachedResp && CachedResp.ok)
+	return await CachedResp.json();
+	else return false;
+}
+
+async function PutCachedData(CacheOBJ, CacheLoc)
+{
+	const CacheStorg = await caches.open('mmx-json-cache');
+	await CacheStorg.put(CacheLoc, new Response(JSON.stringify(CacheOBJ), {
+		headers: { 'content-type':'application/json' }
+	}));
+}
 
 function DisplayPopup(Title, Msg, Btn, Type, OnConf = null)
 {
@@ -68,33 +152,52 @@ function ShowModal(MCode)
 
 function Visit(PCode)
 {
+	if (PageIndex == PCode) return;
 	$('.body-content .section')
 	.removeClass('show');
+	TextTitle = '';
+
 	setTimeout(() =>
 	{
 		switch (PCode)
 		{
 			case 0: default:
-				$('#auth-page').css('display', 'grid');	
-				$('#auth-page').addClass('show');
+				if (!IsLogged)
+				{
+					TextTitle = 'Authorization Required || ';
+					$('#auth-page').css('display', 'grid');	
+					$('#auth-page').addClass('show');
+					AddHistory('Auth');
+				}
 				break;
 
 			case 1:
 				$('#index-page').css('display', 'flex');	
 				$('#index-page').addClass('show');
+				TextTitle = 'Homepage || ';
+				AddHistory('Home');
 				break;
 
 			case 2:
+				TextTitle = 'Movies in ' + SecParam + ' Category || ';
 				$('#list-page').css('display', 'flex');	
 				$('#list-page').addClass('show');
+				AddHistory('List/' + SecParam);
 				break;
 
 			case 3:
+				var Spt =  SecParam.split('/'); if (Spt.length == 2)
+				TextTitle = 'Stream ' + Spt[1] + ' Movie || ';
 				$('#watch-page').css('display', 'flex');	
 				$('#watch-page').addClass('show');
+				AddHistory('Watch/' + SecParam);
 				break;
 		}
-	}, 500);
+
+		PageIndex = PCode;
+		document.title = TextTitle + 'Movies-Magix';
+		setTimeout(() => { StopAnimation(); }, 540);
+	}, 260);
 }
 
 function HideMe()
@@ -112,43 +215,28 @@ function LogoTap()
 	//
 }
 
-function FallbackHandler()
+function AddHistory(Loc)
 {
-	if ($("div.anim-bg").css('opacity') != "0")
+	if (IsNavReffered)
 	{
-		$('div.anim-bg').addClass('paused');
-		$('div.anim-bg').addClass('timeout');
-		TimerC = 30; IsAutoReloadDisabled = false;
-
-		CDTimer = setInterval(function()
+		IsNavReffered = false;
+		
+		if (FirstLoad)
 		{
-			TimerC--;
-			
-			if ($("div.anim-bg").css('opacity') == "0") {
-				clearInterval(CDTimer);
-				return;
-			}
-
-			if (IsAutoReloadDisabled)
-			{
-				clearInterval(CDTimer);
-				$('data#refresh-notice').remove();
-				$('.anim-bg div.error p a.stopr').remove();
-				$('.anim-bg div.error p u.lspace').remove();
-				$('.anim-bg .error .rnow').html("Auto reload is disabled!<br>Click here to refresh the page");
-				return;
-			}
-
-			if (TimerC == 0)
-			{
-				clearInterval(CDTimer);
-				$('.anim-bg div.error a.rnow').text("Reloading the page now....");
-				location.reload();
-				return;
-			}
-
-			$('.anim-bg .error .rnow .countdown').text(TimerC + 's');
-		}, 1000);
+			FirstLoad = false;
+			PrevHisState = Loc;
+			history.replaceState('', Loc + ' Page', "#/" + Loc);
+		}
+	}
+	else
+	{
+		PrevHisState = Loc;
+		if (!FirstLoad) history.pushState('', Loc + ' Page', "#/" + Loc);
+		else
+		{
+			FirstLoad = false;
+			history.replaceState('', Loc + ' Page', "#/" + Loc);
+		}
 	}
 }
 
@@ -157,7 +245,6 @@ function StartAnimation(DefTxt = 'Loading')
 	$('.anim-bg .load-text').text(DefTxt);
 	setTimeout(function() {
 		$("div.anim-bg").css('transform', 'translateY' + '(0%)');
-		$("div.anim-bg").removeClass('timeout');
 		$("div.anim-bg").removeClass('paused');
 		$("div.anim-bg").css('z-index', '500');
 		$("div.anim-bg").css('opacity', '1');
@@ -180,7 +267,6 @@ function StopAnimation()
 		$("body").css('overflow', 'visible');
 		$("div.anim-bg").css('z-index', '-5');
 		$("div.anim-bg").addClass('paused');
-		$('div.anim-bg').removeClass('timeout');
 		window.scrollTo({ top: 0, behavior: 'smooth' });
 		if (!$('.anim-bg').hasClass('loaded')) $('.anim-bg').addClass('loaded');
 	}, 500);
@@ -233,7 +319,7 @@ function HandleSubmission(IsLogin, Evt)
 
 	setTimeout(() => { Canceller.abort(); }, 5000);
 	StartAnimation(IsLogin ? 'Verifying' : 'Creating');
-	fetch(TempSvURL + (IsLogin ? 'Login' : 'Register'), ReqInit)
+	fetch('/auth/' + (IsLogin ? 'Login' : 'Register'), ReqInit)
 		.then(async function(AuthRes)
 		{
 			const JResp = await AuthRes.json();
@@ -243,17 +329,64 @@ function HandleSubmission(IsLogin, Evt)
 				StopAnimation();
 				DisplayPopup(JResp.Title, JResp.Reason, "Okay", 2);
 			}
-			else
-			{
-				
-			}
+			else InitHomePg(JResp);
 		})
 		.catch(function(E)
 		{
-			console.log(E);
 			StopAnimation();
 			DisplayPopup("Network Issue", "It looks like your internet connection is unstable, kindly check to make sure that your mobile data is on or you are connected to a Wi-Fi network & then try again",  "Okay", 2);
 		});
 }
 
 // Ends Auth-Page Functions
+
+// Start Home-Page Functions
+
+function InitHomePg(InitOBJ = null, ToVisit = true, NxtId = -1)
+{
+	IsLogged = true;
+	
+	if ($('#index-page .cat').length < 1)
+	{
+		if (InitOBJ && InitOBJ.Settings && InitOBJ.Categories)
+		{
+			$('.settings .sec-bar.behaviour').attr('pos', InitOBJ.Settings.Behaviour);
+			$('.settings .sec-bar.theme').attr('pos', InitOBJ.Settings.Theme);
+			InitOBJ.Categories.forEach(CatElem => { BuildCatBox(CatElem); });
+			
+			switch (InitOBJ.Settings.Theme)
+			{
+				case 1: $('body').attr('theme', 'killer'); break;
+				case 2: $('body').attr('theme', 'blackhole'); break;
+				case 3: $('body').attr('theme', 'natural'); break;
+			}
+		}
+		else
+		{
+			StopAnimation();
+			DisplayPopup("Unknown Error", "An un-expected error was encountered while trying to handle the server response please try refreshing the page, or contact owner if issue persists!", "Okay", 2);
+			return;
+		}
+	}
+
+	if (ToVisit)
+		setTimeout(() =>
+		{
+			Visit(1);
+			setTimeout(() => {
+				StopAnimation(); }, 1000);
+		}, 100);
+	else { PreventLoop = true; LoadPg(NxtId).then(); }
+}
+
+function BuildCatBox(CatName)
+{
+	let CatReadable = CatName.replace(/-/g, ' ');
+	var CatgBX = $('<div/>', { class: 'cat', onclick: 'List(\'' + CatName + '\');' }),
+	CtImg = $('<img/>', { alt: CatName + ' Poster Image', src: 'Images/' + CatName + '_Pic.jpg' }),
+	Frthr = $('<div/>', { class: 'further' }); var Frth1 = $('<b/>'), Frth2 = $('<b/>');
+	Frth1.text(CatReadable); Frth2.text('Click To Load Movies'); Frthr.append(Frth1, Frth2);
+	CatgBX.append(CtImg, Frthr); $('#index-page .wrapper').append(CatgBX);
+}
+
+// Ends Home-Page Functions

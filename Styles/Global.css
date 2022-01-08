@@ -322,28 +322,22 @@ body[theme='blackhole'] #stick-menu
 	justify-content: center;
 	min-height: calc(100vh - 60px);
 	transition: visibility 0s 0.8s;
-	animation: hideToLeft 0.8s ease;
+	animation: collapseHide 0.2s ease;
 }
 
-@keyframes hideToLeft
+@keyframes collapseHide
 {
 	0%
 	{
 		z-index: 1;
 		opacity: 1;
-		transform: translateX(0px) scale(1);
-	}
-	40%
-	{
-		z-index: 1;
-		opacity: 0.6;
-		transform: translateX(100px) scale(0.6);
+		transform: scale(1);
 	}
 	100%
 	{
-		z-index: -5;
 		opacity: 0;
-		transform: translateX(-60vw) scale(0.2);
+		z-index: -5;
+		transform: scale(0.8);
 	}
 }
 
@@ -353,27 +347,19 @@ body[theme='blackhole'] #stick-menu
 	z-index: 1;
 	visibility: visible;
 	transition: visibility 0s 0s;
-	animation: bringToView 0.8s ease;
+	animation: expandShow 0.32s ease;
 }
 
-@keyframes bringToView
+@keyframes expandShow
 {
 	0%
 	{
-		opacity: 0.12;
-		transform: translateX(-60vw) scale(0.2);
+		opacity: 0;
 	}
-	60%
-	{
-		opacity: 0.6;
-		transform: translateX(100px) scale(0.6);
-	}
-	90%
+	100%
 	{
 		opacity: 1;
-		transform: translateX(0px) scale(1.12);
 	}
-	100% { transform: translateX(0px) scale(1); }
 }
 
 /* Content Design Ends */
