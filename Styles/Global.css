@@ -1,3 +1,5 @@
+/* #region Basic Style */
+
 *
 {
 	margin: 0;
@@ -7,13 +9,12 @@
 
 body
 {
+	width: 100vw;
 	display: flex;
 	overflow: hidden;
-	/* position: relative; */
 	min-height: 100vh;
 	flex-direction: column;
 	scroll-behavior: smooth;
-	/* transition: all 0.5s ease; */
 }
 
 #ghostery-tracker-tally { display: none; } /* Removing annoying ghostery bar */
@@ -21,7 +22,9 @@ body[theme='killer'] { background: linear-gradient(to right, #160c20, #2a1425, #
 body[theme='natural'] { background: linear-gradient(to right, #0c201d, #1b3219, #34441b); }
 body[theme='blackhole'] { background: linear-gradient(to right, #000000, #191a19, #333333); }
 
-/* Header Style Begins */
+/* #endregion Basic Style */
+
+/* #region Header Style */
 
 header
 {
@@ -146,7 +149,7 @@ header.sticky .subhead .author
 	{
 		margin-top: -2px;
 		margin-left: -12px;
-		font-size: 0.8em;
+		font-size: 0.7em;
 		letter-spacing: 1px;
 	}
 
@@ -154,14 +157,14 @@ header.sticky .subhead .author
 	{
 		transform: scaleX(1.08);
 		font-weight: normal;
-		font-size: 0.68em;
+		font-size: 0.66em;
 	}
 		
 	header.sticky .subhead .author
 	{
 		letter-spacing: 1.2px;
 		font-weight: normal;
-		font-size: 0.68em;
+		font-size: 0.66em;
 	}
 }
 
@@ -187,9 +190,9 @@ header.sticky .subhead .author
   background: #344;
 }
 
-/* Header Style Ends Here */
+/* #endregion Header Style */
 
-/* Menu Styling Begins */
+/* #region Menu Stye */
 
 #stick-menu
 {
@@ -294,9 +297,9 @@ body[theme='blackhole'] #stick-menu
 	transform: rotate(calc(45deg * var(--dir))) translate(0%);
 }
 
-/* Menu Styling Ends Here */
+/* #endregion Menu Stye */
 
-/* Content Design Starts Here */
+/* #region Body-Content Style */
 
 .body-content
 {
@@ -327,13 +330,13 @@ body[theme='blackhole'] #stick-menu
 
 @keyframes collapseHide
 {
-	0%
+	from
 	{
 		z-index: 1;
 		opacity: 1;
 		transform: scale(1);
 	}
-	100%
+	to
 	{
 		opacity: 0;
 		z-index: -5;
@@ -347,32 +350,26 @@ body[theme='blackhole'] #stick-menu
 	z-index: 1;
 	visibility: visible;
 	transition: visibility 0s 0s;
-	animation: expandShow 0.32s ease;
+	animation: fadeShow 0.32s ease;
 }
 
-@keyframes expandShow
+@keyframes fadeShow
 {
-	0%
-	{
-		opacity: 0;
-	}
-	100%
-	{
-		opacity: 1;
-	}
+	from { opacity: 0; }
+	to { opacity: 1; }
 }
 
-/* Content Design Ends */
+/* #endregion Body-Content Style */
 
-/* Preloader Begins From Here */
+/* #region Preloader Style */
 
 .anim-bg.loaded, .anim-bg.loaded .loop-holder { background: #1d1d1d56; }
-.anim-bg { z-index: 100; transition: opacity 0.2s, transform 0.32s cubic-bezier(0.2, 0.2, 0.2, 1.6); }
+.anim-bg { z-index: 100; transition: opacity 0.2s, transform 0.32s linear; }
 
 .anim-bg, .anim-bg .loop-holder
 {
 	top: 0;
-	right: 0;
+	left: 0;
 	display: flex;
 	min-width: 100vw;
 	background: #111;
@@ -526,9 +523,9 @@ body[theme='blackhole'] #stick-menu
 	to { transform: skew(-10deg) scale(1.2); }
 }
 
-/* Preloader Ends Here */
+/* #endregion Preloader Style */
 
-/* Begin Popup Design */
+/* #region Popup Style */
 
 #popup-msg[type="success"]
 {
@@ -631,7 +628,7 @@ body[theme='blackhole'] #stick-menu
 #popup-msg .msg-box p.popup-ctrl
 {
 	margin-top: 15px;
-	font-family: cursive;
+	font-family: monospace;
 	font-size: 16px;
 	padding: 0 6px;
 }
@@ -663,9 +660,9 @@ body[theme='blackhole'] #stick-menu
 	border: 1.8px dashed gray;
 }
 
-/* End Popup Design */
+/* #endregion Popup Style */
 
-/* Start Pop-Box Design */
+/* #region Modal-Box(POP) Style */
 
 .sec-bar
 {
@@ -850,9 +847,9 @@ hr.h
 	margin-bottom: 10px;
 }
 
-/* Pop-Box Style Ends */
+/* #endregion Modal-Box(POP) Style */
 
-/* Start Footer Design */
+/* #region Footer Style */
 
 footer
 {
@@ -862,7 +859,7 @@ footer
 	padding-bottom: 2px;
 	background: #00000078;
 	letter-spacing: 3.2px;
-	font-family: cursive;
+	font-family: monospace;
 	word-spacing: 4px;
 	user-select: none;
 	width: 100%;
@@ -878,4 +875,4 @@ footer
 	box-shadow: #eaedf196 0px -5px 25px -10px;
 }
 
-/* End Footer Design */
+/* #endregion Footer Style */

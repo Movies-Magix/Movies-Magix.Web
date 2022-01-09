@@ -10,7 +10,6 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<title>Unlimited Free & Fastest Movies Streaming || Movies-Magix</title>
 </head>
-<!-- https://www.geeksforgeeks.org/what-is-http-etag/ -->
 <body theme='killer'>
 	<div class="anim-bg">
 		<div class="loop-holder">
@@ -102,8 +101,8 @@
 		</b>
 	</header>
 	<div id="stick-menu">
-		<span style="--delay: 0.48s" class="hidden">Goto Homepage</span>
-		<span style="--delay: 0.40s" class="hidden">Download Movie</span>
+		<span style="--delay: 0.48s" class="home hidden">Goto Homepage</span>
+		<span style="--delay: 0.40s" class="watch hidden">Download Movie</span>
 		<span style="--delay: 0.32s" onclick="ShowModal(1);">Report An Error</span>
 		<span style="--delay: 0.24s" onclick="ShowModal(2);">Request A Movie</span>
 		<span style="--delay: 0.16s" onclick="ShowModal(0);">User Settings</span>
@@ -138,10 +137,7 @@
 		<div class="section" id="index-page"><div class="wrapper"></div></div>
 		<div class="section" id="list-page">
 			<div class="catg">Category Name Here</div>
-			<div class="movs">
-				<div class="movie-card active" onclick="Watch(this, 1)">
-				<img class="img-top" src="" alt="Movie Poster Image"><progress class="" max="100" value="31.23"></progress><div class="mv-info"><b class="lang">Hindi</b><b class="age-rate">3+ </b></div><span class="mv-title">The Angry Birds</span></div>
-			</div>
+			<div class="movs"></div>
 		</div>
 		<div class="section" id="watch-page">
 			<section class="wrapper">

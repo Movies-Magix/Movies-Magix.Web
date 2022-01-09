@@ -1,4 +1,5 @@
-ErStr = '';
+// #region Global Declarations
+
 SecParam = '';
 PageIndex = -1;
 FirstLoad = true;
@@ -8,6 +9,12 @@ GlobTrigger = null;
 PreventLoop = false;
 IsNavReffered = false;
 
+// #endregion Global Declarations
+
+// #region Startup
+
+setTimeout(() => { $(window).trigger('popstate'); }, 1000);
+
 $(document).ready(function()
 {
 	$('.body-content').on("animationend", '.section', function()
@@ -16,12 +23,17 @@ $(document).ready(function()
 		else $(this).css('display', 'none');
 	});
 	
+	($(window).add('#list-page .movs')).on("scroll", function()
+	{
+		$('header').toggleClass('sticky', !this.scrollTop && window.scrollY > 50);
+		$('#go-to-top').toggleClass('active', (this.scrollTop ?? window.scrollY) > 50);
+	});
+
 	$('.sec-bar').on('click', 'span', function (){ $(this).parent().attr('pos', $(this).index()); });
 	$('#stick-menu > span').on("click", function() { $('#stick-menu').removeClass('show'); });
 });
 
-setTimeout(() => { $(window).trigger('popstate'); }, 1000);
-$(window).on("scroll", function() { $('header').toggleClass('sticky', window.scrollY > 20); });
+//scrollTo({ top: 0, behavior: 'smooth' })
 
 $(window).on("popstate", function()
 {
@@ -72,40 +84,179 @@ $(window).on("popstate", function()
 	if (SecID != PageIndex)
 	{
 		IsNavReffered = true;
-		LoadPg(SecID).then();
-		$('#sm-on-off').removeClass('hide');
+		LoadPg(SecID, SecParam).then();
 	}
 });
 
-async function LoadPg(PId)
+// #endregion Startup
+
+// #region Navigations
+
+function LogoTap()
 {
-	if (!PreventLoop && FirstLoad) InitHomePg(InitData, PId == 1, PId);
-	else
+	//
+}
+
+function Visit(PCode)
+{
+	if (PageIndex == PCode) return;
+	$('.body-content .section')
+	.removeClass('show');
+	TextTitle = '';
+
+	setTimeout(() =>
 	{
-		switch (PId)
+		if (!IsLogged)
 		{
-			case 0:
-				//Create Destruct function for Home-Page, List-Page, Watch-Page and invoke it then call Visit
-				break;
+			TextTitle = 'Authorization Required || ';
+			$('#auth-page').css('display', 'grid');	
+			$('#auth-page').addClass('show');
+			AddHistory('Auth');
+		}
+		else
+		{
+			if (PCode != 1) $('#stick-menu .home').removeClass('hidden');
+			$('#stick-menu .watch').addClass('hidden');
+			$('#sm-on-off').removeClass('hide');
 
-			case 2: // List-Page
-				
-				let CchMeta = await GetCachedData('/Meta'),
-				ReqCateg = SecParam;
-				
-				if (CchMeta && CchMeta[ReqCateg])
-				{
-					//
-				}
-				break;
+			switch (PCode)
+			{
+				case 1:
+					$('#index-page').css('display', 'flex');	
+					$('#index-page').addClass('show');
+					TextTitle = 'Homepage || ';
+					AddHistory('Home');
+					CleanUP();
+					break;
 
-			case 3: // Watch-Page
-				
-				break;
+				case 2:
+					TextTitle = 'Movies in ' + SecParam + ' Category || ';
+					$('#list-page').css('display', 'flex');	
+					$('#list-page').addClass('show');
+					AddHistory('List/' + SecParam);
+					break;
+
+				case 3:
+					$('#stick-menu .watch').removeClass('hidden');
+					var Spt =  SecParam.split('/'); if (Spt.length == 2)
+					TextTitle = 'Stream ' + DeSanitize(Spt[1]) + ' Movie || ';
+					$('#watch-page').css('display', 'flex');	
+					$('#watch-page').addClass('show');
+					AddHistory('Watch/' + SecParam);
+					break;
+			}
 		}
 
-		Visit(PId);
-		setTimeout(() => { StopAnimation(); }, 1000);
+		PageIndex = PCode;
+		document.title = TextTitle + 'Movies-Magix';
+		setTimeout(() => { StopAnimation(); }, 540);
+	}, 260);
+}
+
+async function LoadPg(PId, ResParam = null)
+{
+	try
+	{
+		if (!PreventLoop && FirstLoad) InitHomePg(InitData, PId == 1, PId, ResParam);
+		else
+		{
+			StartAnimation();
+
+			switch (PId)
+			{
+				case 2: // List-Page
+
+					if (!ResParam) { StopAnimation(); return; }
+					let CchMeta = await GetCachedData('/Meta'),
+					ReqCateg = ResParam, CatgHash = 'null';
+					if (CchMeta && CchMeta[ReqCateg])
+						CatgHash = CchMeta[ReqCateg];
+					
+					var LstResp = await fetch('/api/List',
+					{
+						headers:
+						{
+							'X-Category': ReqCateg,
+							'X-Catg-Hash': CatgHash
+						}
+					});
+
+					if (XResp = await GoodResponse(LstResp))
+					{
+						let HsdObj = CchMeta ?? { }, StrObj = await GetCachedData('/Data/' + ReqCateg) ?? { };
+						HsdObj[ReqCateg] = XResp.Hash; await StoreCache(HsdObj, '/Meta');
+						var AllKeys = [];
+
+						if (LstResp.status == 200)
+						{
+							StrObj = XResp.Data;
+							AllKeys = Object.keys(StrObj);
+						}
+						else
+						{
+							AllKeys = Object.keys(StrObj);
+							let TmpKey = Object.keys(XResp.Data);
+							TmpKey.forEach(function(PartKey)
+							{
+								StrObj[PartKey]['Visit'] = XResp.Data.Visit;
+								StrObj[PartKey]['Watched'] = XResp.Data.Watched;
+							});
+
+							for (let I = 0; I < AllKeys.length; I++)
+							{
+								const UnKey = AllKeys[I];
+								if (!TmpKey.includes(UnKey))
+									TmpKey.push(UnKey);
+							}
+
+							AllKeys = TmpKey;
+						}
+
+						SecParam = ReqCateg;
+						$('#list-page .movs').empty();
+						await StoreCache(StrObj, '/Data/' + ReqCateg);
+						$('#list-page .catg').text(DeSanitize(ReqCateg));
+						AllKeys.forEach(MovI => BuildMovBox(ReqCateg, MovI, StrObj[MovI]));
+					}
+					else
+					{
+						if (IsNavReffered && !FirstLoad)
+							history.back();
+						else Visit(1);
+						return;
+					}
+					break;
+
+				case 3: // Watch-Page
+					
+					if (!ResParam) { StopAnimation(); return; }
+					break;
+			}
+
+			Visit(PId);
+		}
+	}
+	catch(Er) { InformNETError(Er) }
+}
+
+// #endregion Navigations
+
+// #region Response + Cache-Tool
+
+async function GoodResponse(SvrResp)
+{
+	let SvOBJ = await SvrResp.json();
+	if (SvrResp.ok && SvOBJ.Success) return SvOBJ;
+	else
+	{
+		if (SvOBJ.Display)
+		{
+			StopAnimation();
+			DisplayPopup(SvOBJ.Title, SvOBJ.Message, "Okay", 2);
+		}
+		if (SvrResp.status == 401) DestroySession();
+
+		return false;
 	}
 }
 
@@ -115,16 +266,20 @@ async function GetCachedData(CacheUrl)
 	const CachedResp = await CacheStorg.match(CacheUrl);
 	if (CachedResp && CachedResp.ok)
 	return await CachedResp.json();
-	else return false;
+	else return null;
 }
 
-async function PutCachedData(CacheOBJ, CacheLoc)
+async function StoreCache(CacheOBJ, CacheLoc)
 {
 	const CacheStorg = await caches.open('mmx-json-cache');
 	await CacheStorg.put(CacheLoc, new Response(JSON.stringify(CacheOBJ), {
 		headers: { 'content-type':'application/json' }
 	}));
 }
+
+// #endregion Response + Cache-Tool
+
+// #region Modals & Popups
 
 function DisplayPopup(Title, Msg, Btn, Type, OnConf = null)
 {
@@ -142,62 +297,18 @@ function DisplayPopup(Title, Msg, Btn, Type, OnConf = null)
 	}, 500);
 }
 
+function InformNETError(_E)
+{
+	StopAnimation();
+	DisplayPopup("Network Issue", "It looks like your internet connection is unstable, kindly check to make sure that your mobile data is on or you are connected to a Wi-Fi network & then try again",  "Okay", 2);
+}
+
 function ShowModal(MCode)
 {
 	if (MCode > 2) MCode = 0;
 	$('#pop-box > div').removeClass('active');
 	$('#pop-box > div').eq(MCode).addClass('active');
 	$('#pop-box').addClass('display');
-}
-
-function Visit(PCode)
-{
-	if (PageIndex == PCode) return;
-	$('.body-content .section')
-	.removeClass('show');
-	TextTitle = '';
-
-	setTimeout(() =>
-	{
-		switch (PCode)
-		{
-			case 0: default:
-				if (!IsLogged)
-				{
-					TextTitle = 'Authorization Required || ';
-					$('#auth-page').css('display', 'grid');	
-					$('#auth-page').addClass('show');
-					AddHistory('Auth');
-				}
-				break;
-
-			case 1:
-				$('#index-page').css('display', 'flex');	
-				$('#index-page').addClass('show');
-				TextTitle = 'Homepage || ';
-				AddHistory('Home');
-				break;
-
-			case 2:
-				TextTitle = 'Movies in ' + SecParam + ' Category || ';
-				$('#list-page').css('display', 'flex');	
-				$('#list-page').addClass('show');
-				AddHistory('List/' + SecParam);
-				break;
-
-			case 3:
-				var Spt =  SecParam.split('/'); if (Spt.length == 2)
-				TextTitle = 'Stream ' + Spt[1] + ' Movie || ';
-				$('#watch-page').css('display', 'flex');	
-				$('#watch-page').addClass('show');
-				AddHistory('Watch/' + SecParam);
-				break;
-		}
-
-		PageIndex = PCode;
-		document.title = TextTitle + 'Movies-Magix';
-		setTimeout(() => { StopAnimation(); }, 540);
-	}, 260);
 }
 
 function HideMe()
@@ -210,35 +321,9 @@ function HideMe()
 	}
 };
 
-function LogoTap()
-{
-	//
-}
+// #endregion Modals & Popups
 
-function AddHistory(Loc)
-{
-	if (IsNavReffered)
-	{
-		IsNavReffered = false;
-		
-		if (FirstLoad)
-		{
-			FirstLoad = false;
-			PrevHisState = Loc;
-			history.replaceState('', Loc + ' Page', "#/" + Loc);
-		}
-	}
-	else
-	{
-		PrevHisState = Loc;
-		if (!FirstLoad) history.pushState('', Loc + ' Page', "#/" + Loc);
-		else
-		{
-			FirstLoad = false;
-			history.replaceState('', Loc + ' Page', "#/" + Loc);
-		}
-	}
-}
+// #region Preloader Triggers
 
 function StartAnimation(DefTxt = 'Loading')
 {
@@ -264,15 +349,27 @@ function StopAnimation()
 	
 	setTimeout(function()
 	{
-		$("body").css('overflow', 'visible');
-		$("div.anim-bg").css('z-index', '-5');
 		$("div.anim-bg").addClass('paused');
+		$("div.anim-bg").css('z-index', '-5');
 		window.scrollTo({ top: 0, behavior: 'smooth' });
 		if (!$('.anim-bg').hasClass('loaded')) $('.anim-bg').addClass('loaded');
+		setTimeout(() => { $("body").css('overflow', 'visible'); }, 500);
 	}, 500);
 }
 
-// Start Auth-Page Functions
+// #endregion Preloader Triggers
+
+// #region UI Base Functions
+
+function BuildCatBox(CatName)
+{
+	let CatReadable = CatName.replace(/-/g, ' ');
+	var CatgBX = $('<div/>', { class: 'cat', onclick: 'LoadPg(2, \'' + CatName + '\');' }),
+	CtImg = $('<img/>', { alt: CatName + ' Poster Image', src: 'Images/' + CatName + '_Pic.jpg' }),
+	Frthr = $('<div/>', { class: 'further' }); var Frth1 = $('<b/>'), Frth2 = $('<b/>');
+	Frth1.text(CatReadable); Frth2.text('Click To Load Movies'); Frthr.append(Frth1, Frth2);
+	CatgBX.append(CtImg, Frthr); $('#index-page .wrapper').append(CatgBX);
+}
 
 function HandleSubmission(IsLogin, Evt)
 {
@@ -320,29 +417,32 @@ function HandleSubmission(IsLogin, Evt)
 	setTimeout(() => { Canceller.abort(); }, 5000);
 	StartAnimation(IsLogin ? 'Verifying' : 'Creating');
 	fetch('/auth/' + (IsLogin ? 'Login' : 'Register'), ReqInit)
-		.then(async function(AuthRes)
-		{
-			const JResp = await AuthRes.json();
-
-			if (!JResp.Success)
-			{
-				StopAnimation();
-				DisplayPopup(JResp.Title, JResp.Reason, "Okay", 2);
-			}
-			else InitHomePg(JResp);
-		})
-		.catch(function(E)
-		{
-			StopAnimation();
-			DisplayPopup("Network Issue", "It looks like your internet connection is unstable, kindly check to make sure that your mobile data is on or you are connected to a Wi-Fi network & then try again",  "Okay", 2);
-		});
+		.then(async function(AuthRes) { GoodResponse(AuthRes).then(XRsp => 
+			{ if (XRsp) InitHomePg(XRsp); } ); }).catch(InformNETError);
 }
 
-// Ends Auth-Page Functions
+function BuildMovBox(CurCatg, MovName, MovDetail)
+{
+	var ResPath = CurCatg + '/' + MovName;
+	let MCard = $('<div/>', { class: 'movie-card', onclick: 'LoadPg(3, \'' + ResPath + '\')' });
+	var TLImg = $('<img/>', { src: '/media/' + ResPath + '.jpg',
+	alt: 'Movie Poster' }), TLTitle = $('<span/>'),
+	TLMInf = $('<div/>', { class: 'mv-info' });
+	
+	var SLLang = $('<b/>', { class: 'lang' }),
+	SLRate = $('<b/>', { class: 'age-rate' });
 
-// Start Home-Page Functions
+	SLLang.text(MovDetail.Language);
+	TLTitle.text(DeSanitize(MovName));
+	SLRate.text(MovDetail.Rating.split('+')[0] + '+');
+	TLMInf.append(SLLang, SLRate); MCard.append(TLImg);
+	if (MovDetail.HasHistory) MCard.append($('<progress/>',
+		{ max: 1, value: MovDetail.Watched }));
+	MCard.append(TLMInf, TLTitle);
+	$('#list-page .movs').append(MCard);
+}
 
-function InitHomePg(InitOBJ = null, ToVisit = true, NxtId = -1)
+function InitHomePg(InitOBJ = null, ToVisit = true, NxtId = -1, EParam = null)
 {
 	IsLogged = true;
 	
@@ -376,17 +476,74 @@ function InitHomePg(InitOBJ = null, ToVisit = true, NxtId = -1)
 			setTimeout(() => {
 				StopAnimation(); }, 1000);
 		}, 100);
-	else { PreventLoop = true; LoadPg(NxtId).then(); }
+	else { PreventLoop = true; LoadPg(NxtId, EParam).then(); }
 }
 
-function BuildCatBox(CatName)
+// #endregion UI Base Functions
+
+// #region Utilities
+
+function CleanUP()
 {
-	let CatReadable = CatName.replace(/-/g, ' ');
-	var CatgBX = $('<div/>', { class: 'cat', onclick: 'List(\'' + CatName + '\');' }),
-	CtImg = $('<img/>', { alt: CatName + ' Poster Image', src: 'Images/' + CatName + '_Pic.jpg' }),
-	Frthr = $('<div/>', { class: 'further' }); var Frth1 = $('<b/>'), Frth2 = $('<b/>');
-	Frth1.text(CatReadable); Frth2.text('Click To Load Movies'); Frthr.append(Frth1, Frth2);
-	CatgBX.append(CtImg, Frthr); $('#index-page .wrapper').append(CatgBX);
+	$('#list-page .movs').empty();
+	$('#pop-box').removeClass('display');
+	$('#stick-menu .home').addClass('hidden');
+	// [To-Do] cleanup of watch-page also
 }
 
-// Ends Home-Page Functions
+function AddHistory(Loc)
+{
+	if (IsNavReffered)
+	{
+		IsNavReffered = false;
+		
+		if (FirstLoad)
+		{
+			FirstLoad = false;
+			PrevHisState = Loc;
+			history.replaceState('', Loc + ' Page', "#/" + Loc);
+		}
+	}
+	else
+	{
+		PrevHisState = Loc;
+		if (!FirstLoad) history.pushState('', Loc + ' Page', "#/" + Loc);
+		else
+		{
+			FirstLoad = false;
+			history.replaceState('', Loc + ' Page', "#/" + Loc);
+		}
+	}
+}
+
+function DestroySession()
+{
+	StartAnimation();
+	IsLogged = false;
+	FirstLoad = true; Visit(0);
+	$('#list-page .movs').empty();
+	$('#sm-on-off').addClass('hide');
+	$('#index-page .wrapper').empty();
+	$('#pop-box').removeClass('display');
+	// [To-Do] cleanup of watch-page also
+	
+	setTimeout(() =>
+	{
+		StopAnimation();
+		DisplayPopup("Session Expired", 'Your Authenticated session was expired might be due to another login from other browser or your <b>IP-Address</b> was changed. Kindly login again if you want to continue!', 'Okay', 1);
+	}, 1000);
+}
+
+function DeSanitize(Title)
+{
+    if (!Title) return '';
+	return Title.replace(/\+\+/g, '.')
+		.replace(/-/g, ' ')
+		.replace(/@@/g, '$')
+		.replace(/{{/g, '[')
+		.replace(/}}/g, ']')
+		.replace(/\~\|\|/g, '/')
+		.replace(/\|\|\~/g, '\\');
+}
+
+// #endregion Utilities
