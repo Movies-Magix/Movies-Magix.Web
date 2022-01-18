@@ -1,9 +1,12 @@
 // #region Global Declarations
 
+NavState = 0;
+Settings = {};
 SecParam = '';
 PageIndex = -1;
 FirstLoad = true;
 IsLogged = false;
+VidHandler = null;
 PrevHisState = '';
 GlobTrigger = null;
 PreventLoop = false;
@@ -13,14 +16,20 @@ IsNavReffered = false;
 
 // #region Startup
 
-setTimeout(() => { $(window).trigger('popstate'); }, 1000);
-
 $(document).ready(function()
 {
+	setTimeout(() => { $(window).trigger('popstate'); }, 1000);
+	
 	$('.body-content').on("animationend", '.section', function()
 	{
 		if ($(this).hasClass('show')) return;
 		else $(this).css('display', 'none');
+	});
+
+	$('#auth-page').on("transitionend", '.register-frm', function()
+	{
+		if ($('#auth-page').hasClass('login'))
+			$(this).css('display', 'none');
 	});
 	
 	($(window).add('#list-page .movs')).on("scroll", function()
@@ -29,13 +38,23 @@ $(document).ready(function()
 		$('#go-to-top').toggleClass('active', (this.scrollTop ?? window.scrollY) > 50);
 	});
 
+	$('#go-to-top').on('click', function()
+	{
+		if (PageIndex != 2) window.scrollTo({ top: 0, behavior: 'smooth' });
+		else $('#list-page .movs')[0].scrollTo({ top: 0, behavior: 'smooth' });
+	});
+
+	$(window).on('keydown', function(KdE)
+	{
+		if (KdE.keyCode == 38 || KdE.keyCode == 40)
+			if (PageIndex == 2) $('#list-page .movs').focus();
+	});
+
 	$('.sec-bar').on('click', 'span', function (){ $(this).parent().attr('pos', $(this).index()); });
 	$('#stick-menu > span').on("click", function() { $('#stick-menu').removeClass('show'); });
 });
 
-//scrollTo({ top: 0, behavior: 'smooth' })
-
-$(window).on("popstate", function()
+$(window).on("popstate", function(PSE)
 {
 	var InitTxt = $('div#pre-auth').text(), Errored = false;
 	SecID = -1, LocHsh = location.hash, SecHsh = LocHsh.split('/');
@@ -83,8 +102,8 @@ $(window).on("popstate", function()
 
 	if (SecID != PageIndex)
 	{
-		IsNavReffered = true;
-		LoadPg(SecID, SecParam).then();
+		NavState = parseInt(PSE.state);
+		IsNavReffered = true; LoadPg(SecID, SecParam);
 	}
 });
 
@@ -94,12 +113,15 @@ $(window).on("popstate", function()
 
 function LogoTap()
 {
-	//
+	if (!IsLogged) return;
+	if (PageIndex == 1) window.scrollTo({
+		top: 0, behavior: 'smooth' });
+	else LoadPg(1, null);
 }
 
 function Visit(PCode)
 {
-	if (PageIndex == PCode) return;
+	if (PageIndex == PCode) { StopAnimation(); return; }
 	$('.body-content .section')
 	.removeClass('show');
 	TextTitle = '';
@@ -111,11 +133,12 @@ function Visit(PCode)
 			TextTitle = 'Authorization Required || ';
 			$('#auth-page').css('display', 'grid');	
 			$('#auth-page').addClass('show');
-			AddHistory('Auth');
+			NavINHistory('Auth');
 		}
 		else
 		{
 			if (PCode != 1) $('#stick-menu .home').removeClass('hidden');
+			if (PCode != 2) $('#list-page .movs').empty();
 			$('#stick-menu .watch').addClass('hidden');
 			$('#sm-on-off').removeClass('hide');
 
@@ -125,15 +148,14 @@ function Visit(PCode)
 					$('#index-page').css('display', 'flex');	
 					$('#index-page').addClass('show');
 					TextTitle = 'Homepage || ';
-					AddHistory('Home');
-					CleanUP();
+					NavINHistory('Home');
 					break;
 
 				case 2:
 					TextTitle = 'Movies in ' + SecParam + ' Category || ';
 					$('#list-page').css('display', 'flex');	
 					$('#list-page').addClass('show');
-					AddHistory('List/' + SecParam);
+					NavINHistory('List/' + SecParam);
 					break;
 
 				case 3:
@@ -142,7 +164,7 @@ function Visit(PCode)
 					TextTitle = 'Stream ' + DeSanitize(Spt[1]) + ' Movie || ';
 					$('#watch-page').css('display', 'flex');	
 					$('#watch-page').addClass('show');
-					AddHistory('Watch/' + SecParam);
+					NavINHistory('Watch/' + SecParam);
 					break;
 			}
 		}
@@ -153,87 +175,92 @@ function Visit(PCode)
 	}, 260);
 }
 
-async function LoadPg(PId, ResParam = null)
+var NavINHistory = (function()
+{
+	let SPointer = 0;
+	const HStack = [];
+
+    return function(Addr)
+	{
+		if (FirstLoad)
+		{
+			HStack.push(Addr);
+			FirstLoad = false;
+			IsNavReffered = false;
+			history.replaceState(0,
+			Addr + ' Page', "#/" + Addr);
+			return;
+		}
+		else
+		{
+			if (!IsNavReffered)
+			{
+				HStack.push(Addr);
+				SPointer = HStack.length - 1;
+				history.pushState(SPointer, Addr
+					+ ' Page', "#/" + Addr);
+				return;
+			}
+			else
+			{
+				// console.log((SPointer < NavState) ? 'Forward' : 'Backward');
+				IsNavReffered = false;
+				SPointer = NavState;
+			}
+		}
+    };
+})();
+
+async function LoadPg(PId, ResParam = '')
 {
 	try
 	{
 		if (!PreventLoop && FirstLoad) InitHomePg(InitData, PId == 1, PId, ResParam);
 		else
 		{
+			let VisitDelay = 500;
 			StartAnimation();
+			CleanUP();
 
 			switch (PId)
 			{
 				case 2: // List-Page
-
-					if (!ResParam) { StopAnimation(); return; }
-					let CchMeta = await GetCachedData('/Meta'),
-					ReqCateg = ResParam, CatgHash = 'null';
-					if (CchMeta && CchMeta[ReqCateg])
-						CatgHash = CchMeta[ReqCateg];
-					
-					var LstResp = await fetch('/api/List',
+					if (!ResParam) PId = 1;
+					else if (PopuData = await FetchAndPopulate(ResParam))
 					{
-						headers:
-						{
-							'X-Category': ReqCateg,
-							'X-Catg-Hash': CatgHash
-						}
-					});
-
-					if (XResp = await GoodResponse(LstResp))
-					{
-						let HsdObj = CchMeta ?? { }, StrObj = await GetCachedData('/Data/' + ReqCateg) ?? { };
-						HsdObj[ReqCateg] = XResp.Hash; await StoreCache(HsdObj, '/Meta');
-						var AllKeys = [];
-
-						if (LstResp.status == 200)
-						{
-							StrObj = XResp.Data;
-							AllKeys = Object.keys(StrObj);
-						}
-						else
-						{
-							AllKeys = Object.keys(StrObj);
-							let TmpKey = Object.keys(XResp.Data);
-							TmpKey.forEach(function(PartKey)
-							{
-								StrObj[PartKey]['Visit'] = XResp.Data.Visit;
-								StrObj[PartKey]['Watched'] = XResp.Data.Watched;
-							});
-
-							for (let I = 0; I < AllKeys.length; I++)
-							{
-								const UnKey = AllKeys[I];
-								if (!TmpKey.includes(UnKey))
-									TmpKey.push(UnKey);
-							}
-
-							AllKeys = TmpKey;
-						}
-
-						SecParam = ReqCateg;
+						SecParam = ResParam;
 						$('#list-page .movs').empty();
-						await StoreCache(StrObj, '/Data/' + ReqCateg);
-						$('#list-page .catg').text(DeSanitize(ReqCateg));
-						AllKeys.forEach(MovI => BuildMovBox(ReqCateg, MovI, StrObj[MovI]));
+						$('#list-page .catg').text(DeSanitize(ResParam));
+						PopuData[0].forEach(MovI => BuildMovBox(ResParam, MovI, PopuData[1][MovI]));
 					}
-					else
-					{
-						if (IsNavReffered && !FirstLoad)
-							history.back();
-						else Visit(1);
-						return;
-					}
+					else return;
 					break;
 
 				case 3: // Watch-Page
+					let Wchs = (ResParam ?? '').split('/'),
+					CatgCH = await GetCachedData('/Data/' + Wchs[0]);
 					
-					if (!ResParam) { StopAnimation(); return; }
+					if (ResParam && Wchs.length == 2)
+					{
+						if ((Fetched = await FetchAndPopulate(Wchs[0]))) CatgCH = Fetched[1];
+
+						if (!CatgCH || !CatgCH[Wchs[1]])
+						{
+							if (CatgCH && !CatgCH[Wchs[1]]) DisplayPopup('Movie Unavailable', 'Movie you just requested doesn\'t exists or is currently not available', 'Okay', 1);
+							PId = 1;
+						}
+						else
+						{
+							if (!VidHandler) VidHandler = new PlayerHandler();
+							VidHandler.ReInitElements(Wchs[0], Wchs[1], CatgCH[Wchs[1]]);
+							VidHandler.InPlayerSetup();
+						}
+					}
+					else PId = 1;
 					break;
 			}
 
-			Visit(PId);
+			setTimeout(() => Visit(PId), VisitDelay);
 		}
 	}
 	catch(Er) { InformNETError(Er) }
@@ -269,6 +296,68 @@ async function GetCachedData(CacheUrl)
 	else return null;
 }
 
+async function FetchAndPopulate(LCateg)
+{
+	let CchMeta = await GetCachedData('/Meta'), CatgH = 'null',
+	CchCatData = await GetCachedData('/Data/' + LCateg);
+	if (CchMeta && CchCatData && CchMeta[LCateg])
+		CatgH = CchMeta[LCateg];
+
+	var LstResp = await fetch('/api/List',
+	{
+		headers:
+		{
+			'X-Category': LCateg,
+			'X-Catg-Hash': CatgH
+		}
+	});
+
+	if (XResp = await GoodResponse(LstResp))
+	{
+		let HsdObj = CchMeta ?? { },
+		StrObj = CchCatData ?? { }, AllKeys = [ ];
+		HsdObj[LCateg] = XResp.Hash; await StoreCache(HsdObj, '/Meta');
+
+		if (LstResp.status == 200)
+		{
+			StrObj = XResp.Data;
+			AllKeys = Object.keys(StrObj);
+		}
+		else
+		{
+			AllKeys = Object.keys(StrObj);
+			let TmpKey = Object.keys(XResp.Data);
+			
+			for (let I = 0; I < TmpKey.length; I++)
+			{
+				const MvKey = TmpKey[I];
+				StrObj[MvKey]['HasHistory'] = true;
+				StrObj[MvKey]['Visit'] = XResp.Data[MvKey].Visit;
+				StrObj[MvKey]['Watched'] = XResp.Data[MvKey].Watched;
+			}
+
+			for (let J = 0; J < AllKeys.length; J++)
+			{
+				const UnKey = AllKeys[J];
+				if (!TmpKey.includes(UnKey))
+					TmpKey.push(UnKey);
+			}
+
+			AllKeys = TmpKey;
+		}
+		
+		await StoreCache(StrObj, '/Data/' + LCateg);
+		return [ AllKeys, StrObj ];
+	}
+	else
+	{
+		if (IsNavReffered && !FirstLoad)
+			history.back();
+		else Visit(1);
+		return false;
+	}
+}
+
 async function StoreCache(CacheOBJ, CacheLoc)
 {
 	const CacheStorg = await caches.open('mmx-json-cache');
@@ -297,10 +386,11 @@ function DisplayPopup(Title, Msg, Btn, Type, OnConf = null)
 	}, 500);
 }
 
-function InformNETError(_E)
+function InformNETError(Er)
 {
-	StopAnimation();
-	DisplayPopup("Network Issue", "It looks like your internet connection is unstable, kindly check to make sure that your mobile data is on or you are connected to a Wi-Fi network & then try again",  "Okay", 2);
+	StopAnimation(); console.log(Er);
+	if (Er.name == "SecurityError") DisplayPopup('Permissions Denied', 'Either some permissions for this site is missing or you are in Incognito mode. Please grant permissions from the tools section of the address bar or leave the Incognito mode.', 'Okay', 2);
+	else DisplayPopup("Network Issue", 'It looks like your internet connection is unstable, kindly check to make sure that your mobile data is on or you are connected to a Wi-Fi network & then try again',  "Okay", 2);
 }
 
 function ShowModal(MCode)
@@ -325,26 +415,22 @@ function HideMe()
 
 // #region Preloader Triggers
 
-function StartAnimation(DefTxt = 'Loading')
+function StartAnimation(LoaderTxt = 'Loading')
 {
-	$('.anim-bg .load-text').text(DefTxt);
-	setTimeout(function() {
-		$("div.anim-bg").css('transform', 'translateY' + '(0%)');
+	setTimeout(function()
+	{
+		$("div.anim-bg").css('transform', 'translateX' + '(0%)');
+		$('.anim-bg .load-text').text(LoaderTxt);
 		$("div.anim-bg").removeClass('paused');
 		$("div.anim-bg").css('z-index', '500');
 		$("div.anim-bg").css('opacity', '1');
 		$("body").css('overflow', 'hidden');
-		HasScripted = false;
 	}, 100);
 }
 
 function StopAnimation()
 {
-	HasScripted = true;
-	try { clearTimeout(FbackTOut);
-	clearInterval(CDTimer); } catch(e){}
 	$("div.anim-bg").css('opacity', '0');
-	$("div#css-load-test").css('opacity', '1');
 	$("div.anim-bg").css('transform', 'translateX' + '(-100%)');
 	
 	setTimeout(function()
@@ -360,6 +446,100 @@ function StopAnimation()
 // #endregion Preloader Triggers
 
 // #region UI Base Functions
+
+async function ManageRequest(Code)
+{
+	try
+	{
+		switch (Code)
+		{
+			case -1:
+				$('#pop-box > div input').val('');
+				var SetPnl = $('#pop-box .settings');
+				$('#pop-box').removeClass('display');
+				$('#pop-box .report .sec-bar').attr('pos', 3);
+				SetPnl.find('.theme').attr('pos', Settings.Theme);
+				SetPnl.find('.behaviour').attr('pos', Settings.Behaviour);
+				break;
+
+			case 0:
+				const StPnl = $('#pop-box .settings'), USelThm = parseInt(StPnl.find('.theme').attr('pos')),
+				USelBhv = parseInt(StPnl.find('.behaviour').attr('pos')), NPwd = StPnl.find('input').val(),
+				HasChanged = NPwd || (USelThm != Settings.Theme) || (USelBhv != Settings.Behaviour);
+
+				if (HasChanged)
+				{
+					if (NPwd && !(new RegExp(/^(?=.*\d)(?=.*[a-zA-Z]).{8,64}$/)).test(NPwd))
+					{
+						DisplayPopup("Weak Password", 'Password you are trying to change doesn\'t meet basic security standards! Please make sure that your password is in the range of 8 to 64 characters and contains a combination of numbers & alphabets and then try again!', 'Okay', 1);
+						return;
+					}
+
+					StartAnimation('Saving');
+					let UpdtReq = await fetch('/api/Settings',
+					{
+						method: 'POST',
+						headers: { 'content-type': 'application/json' },
+						body: JSON.stringify({ Pwd: NPwd, Thm: USelThm, Bhv: USelBhv })
+					});
+
+					if (XResp = await GoodResponse(UpdtReq))
+					{
+						Settings.Behaviour = USelBhv;
+						Settings.Theme = USelThm;
+						AlterTheme();
+						
+						setTimeout(() =>
+						{
+							ManageRequest(-1); StopAnimation();
+							DisplayPopup(XResp.Title, XResp.Message, 'Okay', 0);
+						}, 1000);
+					}
+				}
+				else $('#pop-box').removeClass('display');
+				break;
+
+			case 1:
+				const ErPnl = $('#pop-box .report'), InCode = parseInt(ErPnl.find('.sec-bar').attr('pos')),
+				ESub = ErPnl.find('.area input').eq(0).val(), EDescp = ErPnl.find('.area input').eq(1).val();
+
+				StartAnimation('Reporting');
+				const RptReq = await fetch('/api/Error',
+				{
+					method: 'POST',
+					headers: { 'content-type': 'application/json' },
+					body: JSON.stringify({ In: InCode, Subject: ESub, Body: EDescp })
+				});
+
+				if (await GoodResponse(RptReq))
+				{
+					StopAnimation(); ManageRequest(-1);
+					DisplayPopup('Issue Reported', 'Great Work! You had successfully submitted the bug or error. We\'ll be looking into this issue as soon as possible to fix any potential glitch.', 'Okay', 0);
+				}
+				break;
+		
+			case 2:
+				const RqPnl = $('#pop-box .request'), MNm = RqPnl.find('.area input').eq(0).val(),
+				ILink = RqPnl.find('.area input').eq(1).val(), Extras = RqPnl.find('.area input').eq(2).val();
+
+				StartAnimation('Requesting');
+				const ReqReq = await fetch('/api/Movie',
+				{
+					method: 'POST',
+					headers: { 'content-type': 'application/json' },
+					body: JSON.stringify({ Name: MNm, IMDB: ILink, Thoughts: Extras })
+				});
+
+				if (await GoodResponse(ReqReq))
+				{
+					StopAnimation(); ManageRequest(-1);
+					DisplayPopup('Movie Requested', 'Hurrah! You had successfully requested for a new movie. We will check and add it to our platform as soon as possible.', 'Okay', 0);
+				}
+				break;
+		}
+	}
+	catch (E) { InformNETError(E); }
+}
 
 function BuildCatBox(CatName)
 {
@@ -417,8 +597,8 @@ function HandleSubmission(IsLogin, Evt)
 	setTimeout(() => { Canceller.abort(); }, 5000);
 	StartAnimation(IsLogin ? 'Verifying' : 'Creating');
 	fetch('/auth/' + (IsLogin ? 'Login' : 'Register'), ReqInit)
-		.then(async function(AuthRes) { GoodResponse(AuthRes).then(XRsp => 
-			{ if (XRsp) InitHomePg(XRsp); } ); }).catch(InformNETError);
+		.then(async function(AuthRes) { GoodResponse(AuthRes).then(XRsp => {
+			if (XRsp) { InitHomePg(XRsp); $('#auth-page form input').val(''); } } ); }).catch(InformNETError);
 }
 
 function BuildMovBox(CurCatg, MovName, MovDetail)
@@ -450,16 +630,10 @@ function InitHomePg(InitOBJ = null, ToVisit = true, NxtId = -1, EParam = null)
 	{
 		if (InitOBJ && InitOBJ.Settings && InitOBJ.Categories)
 		{
-			$('.settings .sec-bar.behaviour').attr('pos', InitOBJ.Settings.Behaviour);
-			$('.settings .sec-bar.theme').attr('pos', InitOBJ.Settings.Theme);
-			InitOBJ.Categories.forEach(CatElem => { BuildCatBox(CatElem); });
-			
-			switch (InitOBJ.Settings.Theme)
-			{
-				case 1: $('body').attr('theme', 'killer'); break;
-				case 2: $('body').attr('theme', 'blackhole'); break;
-				case 3: $('body').attr('theme', 'natural'); break;
-			}
+			Settings = InitOBJ.Settings;
+			$('.settings .sec-bar.theme').attr('pos', Settings.Theme);
+			$('.settings .sec-bar.behaviour').attr('pos', Settings.Behaviour);
+			InitOBJ.Categories.forEach(CatElem => { BuildCatBox(CatElem); }); AlterTheme();
 		}
 		else
 		{
@@ -476,47 +650,251 @@ function InitHomePg(InitOBJ = null, ToVisit = true, NxtId = -1, EParam = null)
 			setTimeout(() => {
 				StopAnimation(); }, 1000);
 		}, 100);
-	else { PreventLoop = true; LoadPg(NxtId, EParam).then(); }
+	else { PreventLoop = true; LoadPg(NxtId, EParam); }
 }
 
 // #endregion UI Base Functions
+
+// #region Plyr & Watch Functions
+
+class PlayerHandler
+{
+	constructor()
+	{
+		var Exec = false, Tmr = 0,
+		MmxPlayer = null, PInit = 0,
+		SyncedTM = 0;
+
+		this.ReInitElements = function (Catg, MNam, MObj)
+		{
+			let PWch = $('#watch-page .wrapper'), BaseUri = '/media/' + Catg + '/' + MNam;
+			PWch.find('h2.mov-title').text(DeSanitize(MNam));
+			PWch.find('.video-container').empty();
+			SecParam = Catg + '/' + MNam;
+			
+			const VidCtrl = $('<video/>',
+			{
+				controls: '',
+				class: 'player',
+				preload: 'none',
+				playsinline: '',
+			});
+
+			VidCtrl.attr('data-poster', BaseUri + '.jpg');
+			if (Settings.Behaviour != 1) VidCtrl.attr('preload', 'metadata');
+			VidCtrl.append($('<source/>', { src: BaseUri + '.mp4', type: 'video/mp4' }));
+			PWch.find('.video-container').append(VidCtrl);
+
+			var MSz = MObj.Size / 1048576, MSzU = 'MB';
+			if (MSz > 999) { MSz = MSz / 1024; MSzU = 'GB'; }
+			MSz = Math.trunc(MSz * 100) / 100; // Upto 2 Decimals
+			let MDur = Math.trunc((MObj.Duration * 5) / 3) / 100;
+			PWch.find('section.descp p').text(MObj['Description']);
+
+			let MvDetE = PWch.find('.infos > div p');
+			MvDetE.eq(4).html('<i>Rated For:</i>&nbsp;' + MObj.Rating);
+			MvDetE.eq(0).html('<i>Language:</i>&nbsp;' + MObj.Language);
+			MvDetE.eq(2).html('<i>Duration:</i>&nbsp;' + MDur + ' Mins');
+			MvDetE.eq(3).html('<i>Released On:</i>&nbsp;' + MObj.Released);
+			MvDetE.eq(1).html('<i>Video Size:</i>&nbsp;' + MSz + ' ' + MSzU);
+
+			PInit = setInterval(() =>
+			{
+				if (typeof Plyr == 'undefined') return; else clearInterval(PInit);
+				MmxPlayer = new Plyr('#watch-page video.player',
+				{
+					storage: { enabled: true, key: "Plyr" },
+					blankVideo: '/media/Assets/Blank.mp4',
+					iconUrl: '/media/assets/Plyr.svg',
+					listeners:
+					{
+						fullscreen: function ()
+						{
+							if (MmxPlayer.fullscreen.active)
+							{
+								if (IsOnPhone()) screen.orientation.unlock();
+								setTimeout(() => { MmxPlayer.fullscreen.exit(); }, 1000);
+							}
+
+							else
+							{
+								MmxPlayer.fullscreen.enter();
+								if (IsOnPhone()) setTimeout(() =>
+									{
+										screen.orientation.lock("landscape")
+										.catch(function (_E) { console.warn("Landscape mode is not available!!"); });
+									}, 1000);
+							}
+
+							return false;
+						}
+					}
+				});
+
+				MmxPlayer.once('loadedmetadata', function()
+				{
+					if (MObj.HasHistory)
+					{
+						MmxPlayer.currentTime =	MObj.Watched * MmxPlayer.duration;
+						SyncedTM = MmxPlayer.currentTime;
+					}
+
+					if (Settings.Behaviour == 3)
+					{
+						MmxPlayer.muted = true;
+						MmxPlayer.play().catch(() => DisplayPopup('Autoplay Disabled', 'Your browser settings or preferences doesn\'t allow autoplay, Please allow this site in your settings or manually start the video.', 'Okay', 2));
+						setTimeout(() => { MmxPlayer.muted = false; }, 100);
+					}
+
+					Tmr = setInterval(() =>
+					{
+						const CurrTime = MmxPlayer.currentTime;
+						if (CurrTime > 4 && CurrTime != SyncedTM)
+						{
+							let LHash = location.hash.split('/');
+
+							fetch('/media/Log',
+							{
+								method: 'POST',
+								headers: { 'content-type': 'application/json' },
+								body: '{"Name": "' + LHash[LHash.length - 1] + '", "Time": ' + CurrTime + '}'
+							}).then((Resp) => { if (Resp.ok) SyncedTM = CurrTime; }).catch(() => { });
+						}
+					}, 60000);
+				});
+
+				MmxPlayer.on('error', console.log);
+				$('#watch-page .plyr__video-wrapper').append(
+					$('#watch-page .in-plyr').remove());
+			}, 100);
+		};
+
+		this.InPlayerSetup = function ()
+		{
+			if (Exec) return;
+			else Exec = true;
+			let IsPlyrPaused = null, IsSeeking = false, Diff = 0, ForwardTimer = 0, BackwardTimer = 0;
+			const InPlayer = $('#watch-page .in-plyr')[0];
+
+			$(InPlayer).on('dblclick click', function (E)
+			{
+				E.stopPropagation();
+				if (!MmxPlayer) return;
+				if (E.type == 'click' && !IsSeeking) return;
+				if (E.type == 'dblclick' && IsSeeking) return;
+
+				const XRel = E.pageX - $(this).offset().left;
+				let ClickX = (XRel * 100) / InPlayer.offsetWidth;
+				if (ClickX <= 40) SeekAction('backward');
+				else if (ClickX >= 60) SeekAction();
+				else MmxPlayer.togglePlay();
+			});
+
+			function SeekAction(SType = 'forward')
+			{
+				if (!IsSeeking)
+				{
+					if (IsPlyrPaused == null)
+						IsPlyrPaused = MmxPlayer.paused;
+					MmxPlayer.pause();
+					IsSeeking = true;
+				}
+
+				let IsForward = SType == 'forward';
+				const Tapr = $('#watch-page .in-plyr .' + SType);
+				clearTimeout(IsForward ? ForwardTimer : BackwardTimer);
+				let RwDelta = parseInt(Tapr.find('.txt').text());
+				Tapr.addClass('active'); RwDelta += 10;
+				Tapr.find('.txt').text(RwDelta + ' S');
+				let SeekTimer = setTimeout((IsF) =>
+				{
+					Diff += (IsForward ? 1 : -1) * RwDelta;
+					Tapr.find('.txt').text('0 S');
+					Tapr.removeClass('active');
+					if (IsF) ForwardTimer = 0;
+					else BackwardTimer = 0;
+
+					if (!ForwardTimer && !BackwardTimer)
+					{
+						IsSeeking = false;
+						MmxPlayer.currentTime += Diff;
+						if (!IsPlyrPaused)
+							MmxPlayer.play();
+						IsPlyrPaused = null; Diff = 0;
+					}
+				}, 1000, IsForward);
+
+				if (IsForward) ForwardTimer = SeekTimer;
+				else BackwardTimer = SeekTimer;
+			}
+		};
+
+		this.Dispose = function ()
+		{
+			$('#watch-page .wrapper').append($('#watch-page .in-plyr').remove());
+			$('#watch-page .in-plyr').off('dblclick click');
+			clearInterval(Tmr);
+
+			if (MmxPlayer) MmxPlayer.destroy(function ()
+				{
+					MmxPlayer.pause(); MmxPlayer = null;
+					$('#watch-page video source').remove();
+					$('#watch-page video.player').get(0).load();
+				});
+			VidHandler = null;
+		};
+	}
+};
+
+async function DownloadMov()
+{
+	const DldFth = await fetch('/media/' + SecParam +
+	'.mp4', { headers: { 'X-MType':'Download' } });
+	
+	if (XResp = await GoodResponse(DldFth))
+	{
+		$('iframe').attr('src', XResp.URL);
+		setTimeout(() => { DisplayPopup('Download Started',
+		'Hurrah! the requested movie is being downloaded, Enjoy!', 'Okay', 0) }, 2000);
+	}
+}
+
+// #endregion Plyr & Watch Functions
 
 // #region Utilities
 
 function CleanUP()
 {
-	$('#list-page .movs').empty();
 	$('#pop-box').removeClass('display');
 	$('#stick-menu .home').addClass('hidden');
-	// [To-Do] cleanup of watch-page also
+	if (VidHandler) VidHandler.Dispose();
 }
 
-function AddHistory(Loc)
+function LogMeOut()
 {
-	if (IsNavReffered)
+	StartAnimation('Removing');
+	fetch('/auth/Session', { method: 'DELETE' })
+	.then(DestroySession).catch(InformNETError);
+}
+
+function IsOnPhone()
+{
+   try { document.createEvent("TouchEvent"); return true; }
+   catch(_NEP) { return false; }
+}
+
+function AlterTheme()
+{
+	if (!Settings.Theme) return;
+	switch (Settings.Theme)
 	{
-		IsNavReffered = false;
-		
-		if (FirstLoad)
-		{
-			FirstLoad = false;
-			PrevHisState = Loc;
-			history.replaceState('', Loc + ' Page', "#/" + Loc);
-		}
-	}
-	else
-	{
-		PrevHisState = Loc;
-		if (!FirstLoad) history.pushState('', Loc + ' Page', "#/" + Loc);
-		else
-		{
-			FirstLoad = false;
-			history.replaceState('', Loc + ' Page', "#/" + Loc);
-		}
+		case 1: $('body').attr('theme', 'killer'); break;
+		case 2: $('body').attr('theme', 'blackhole'); break;
+		case 3: $('body').attr('theme', 'natural'); break;
 	}
 }
 
-function DestroySession()
+function DestroySession(Evt = null)
 {
 	StartAnimation();
 	IsLogged = false;
@@ -525,12 +903,13 @@ function DestroySession()
 	$('#sm-on-off').addClass('hide');
 	$('#index-page .wrapper').empty();
 	$('#pop-box').removeClass('display');
-	// [To-Do] cleanup of watch-page also
+	if (VidHandler) VidHandler.Dispose();
 	
 	setTimeout(() =>
 	{
-		StopAnimation();
-		DisplayPopup("Session Expired", 'Your Authenticated session was expired might be due to another login from other browser or your <b>IP-Address</b> was changed. Kindly login again if you want to continue!', 'Okay', 1);
+		StopAnimation(); if (!Evt)
+		DisplayPopup("Session Expired", 'Your Authenticated session was expired probably due to another login from other browser. Kindly login again if you want to continue!', 'Okay', 1);
+		else DisplayPopup("Logged Out", 'You have been logged out successfully. Have a great day ahead!', "Okay", 0);
 	}, 1000);
 }
 

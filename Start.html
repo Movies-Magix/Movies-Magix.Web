@@ -2,13 +2,15 @@
 <html lang='en'>
 <head>
 	<meta charset='UTF-8'>
-	<script src="Scripts/Zepto-Min.js"></script>
-	<script src="Scripts/Controller.js"></script>
+	<link rel="shortcut icon" href="Icon.png">
 	<link rel="stylesheet" href="Styles/Global.css">
+	<script defer src="Scripts/Zepto-Min.js"></script>
+	<script defer src="Scripts/Controller.js"></script>
 	<link rel="stylesheet" href="Styles/UI-Design.css">
-	<link rel="shortcut icon" href="Icon.png" type="image/png">
+	<script defer src="Scripts/Plyr-Player.js"></script>
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<title>Unlimited Free & Fastest Movies Streaming || Movies-Magix</title>
+	<link rel="stylesheet" href="Styles/Plyr-Player.css" media="print" onload="this.media='all'; this.onload = null;">
 </head>
 <body theme='killer'>
 	<div class="anim-bg">
@@ -25,7 +27,7 @@
 		</div>
 	</div>
 	<div id="pop-box" class>
-		<span onclick="$('#pop-box').removeClass('display');">
+		<span onclick="ManageRequest(-1);">
 			<span style="--dir: 1;"></span>
 			<span style="--dir: -1;"></span>
 		</span>
@@ -54,6 +56,9 @@
 					<span>Auto Play</span>
 				</div>
 			</div><hr>
+			<div class="area">
+				<button type="submit" onclick="ManageRequest(0);" class="dsg">Save Settings</button>
+			</div>
 		</div>
 		<div class="report">
 			<b>Report An Error</b>
@@ -73,8 +78,11 @@
 			</div><hr>
 			<div class="area">
 				<span class="topic">Briefly Describe The Issue</span>
-				<input class="dsg" type="text" placeholder="This Is Required Field">
+				<input class="dsg" type="text" placeholder="This Is A Required Field">
 			</div><hr>
+			<div class="area">
+				<button type="submit" onclick="ManageRequest(1);" class="dsg">Report Error</button>
+			</div>
 		</div>
 		<div class="request">
 			<b>Request A Movie</b>
@@ -91,22 +99,26 @@
 				<span class="topic">Anything Else? (Optional)</span>
 				<input class="dsg" type="text" placeholder="Your thoughts if any!">
 			</div><hr>
+			<div class="area">
+				<button type="submit" onclick="ManageRequest(2);" class="dsg">Send Request</button>
+			</div>
 		</div>
 	</div>
 	<header>
-		<a onclick="LogoTap()" class="logo"><img alt="Website Logo" src="Icon.png">Movies - Magix</a>
+		<a onclick="LogoTap();" class="logo"><img alt="Website Logo" src="Icon.png">Movies - Magix</a>
 		<b class="subhead">
 			Movies at your fingertips!
 			<b class="author">By RISHABH KUMAR</b>
 		</b>
 	</header>
+	<div id="go-to-top"><img src="Images/Go-Up.png" alt="Back To Top"/></div>
 	<div id="stick-menu">
-		<span style="--delay: 0.48s" class="home hidden">Goto Homepage</span>
-		<span style="--delay: 0.40s" class="watch hidden">Download Movie</span>
+		<span style="--delay: 0.48s" class="home hidden" onclick="LoadPg(1, null);">Goto Homepage</span>
+		<span style="--delay: 0.40s" class="watch hidden" onclick="DownloadMov();">Download Movie</span>
 		<span style="--delay: 0.32s" onclick="ShowModal(1);">Report An Error</span>
 		<span style="--delay: 0.24s" onclick="ShowModal(2);">Request A Movie</span>
 		<span style="--delay: 0.16s" onclick="ShowModal(0);">User Settings</span>
-		<span style="--delay: 0.08s">Logout</span>
+		<span style="--delay: 0.08s" onclick="LogMeOut();">Logout</span>
 	</div>
 	<div id="sm-on-off" class="hide" onclick="$('#stick-menu').toggleClass('show');">
 		<span style="--dir: 1;"></span>
@@ -116,13 +128,14 @@
 		<div class="section login show" id="auth-page">
 			<form class="login-frm" onsubmit="HandleSubmission(true, event);">
 				<b>Login To Proceed</b>
-				<p>Private access is required, login first to access it's services.</p>
+				<p>Private access is required, login first to access the services.</p>
 				<input class="dsg" type="email" id="l-email" tabindex="1" placeholder="Enter Email" required/>
 				<input class="dsg" type="password" id="l-pwd" tabindex="2" placeholder="Your Password" required/>
-				<button tabindex="3" type="submit">LOGIN NOW</button>
-				<a onclick="$('#auth-page').removeClass('login');">OR Register Here</a>
+				<button tabindex="3" class="dsg" type="submit">LOGIN NOW</button>
+				<a onclick="$('#auth-page .register-frm').css('display', 'flex');
+				setTimeout(() => { $('#auth-page').removeClass('login'); }, 200);">OR Register Here</a>
 			</form>
-			<form class="register-frm" onsubmit="HandleSubmission(false, event);">
+			<form class="register-frm" onsubmit="HandleSubmission(false, event);" style="display:none;">
 				<b>Register To Continue</b>
 				<p>Registration is secured with an access code ask owner for more details.</p>
 				<input class="dsg" type="text" tabindex="1" id="r-name" placeholder="Enter Your Name" required/>
@@ -130,44 +143,49 @@
 				<input class="dsg" type="password" id="r-pwd" tabindex="3" placeholder="Create A New Password" required/>
 				<input class="dsg" type="password" id="r-cf-pwd" tabindex="4" placeholder="Confirm The Password" required/>
 				<input class="dsg" type="text" id="r-access" tabindex="5" placeholder="Enter The Access Code" required/>
-				<button type="submit" tabindex="6">REGISTER NOW</button>
+				<button type="submit" class="dsg" tabindex="6">REGISTER NOW</button>
 				<a onclick="$('#auth-page').addClass('login');">OR Login Here</a>
 			</form>
 		</div>
 		<div class="section" id="index-page"><div class="wrapper"></div></div>
 		<div class="section" id="list-page">
 			<div class="catg">Category Name Here</div>
-			<div class="movs"></div>
+			<div class="movs" tabindex="-1"></div>
 		</div>
 		<div class="section" id="watch-page">
 			<section class="wrapper">
-				<section class="top-title">
-					<h2 class="mov-title">Sample Movie Title Will Go Here</h2>
-				</section>
-				<section class="player-wrapper">
-					<div class="video-container">
-						<div class="vid-container">
-							<video class="player" playsinline controls data-poster="">
-								<source src="" type="video/mp4">
-							</video>
-						</div>
-					</div>
-				</section>
+				<section class="top-title"><h2 class="mov-title"></h2></section>
+				<section class="player-wrapper"><div class="video-container"></div></section>
 				<div class="mov-dets">
 					<section class="descp">
-						<b>Quick Movie Description</b><hr>
-						<p>Movie Description Here</p>
+						<b>Quick Movie Description</b>
+						<hr><p></p>
 					</section>
 					<section class="infos">
 						<b>Movie Details</b><hr>
 						<div class="meta">
-							<p><i>Language:</i>&nbsp;English</p>
-							<p><i>Video Size:</i>&nbsp;458.90 MB</p>
-							<p><i>Duration:</i>&nbsp;120.00 Mins</p>
-							<p><i>Rated For:</i>&nbsp;13+ (Guidance)</p>
-							<p><i>Released On:</i>&nbsp;85th AAA 2021</p>
+							<p></p><p></p><p>
+							</p><p></p><p></p>
 						</div>
 					</section>
+				</div>
+				<div class="in-plyr">
+					<div class="forward tapper">
+						<span class="txt">0 S</span>
+						<span class="icon" style="--dir: 1;">
+							<svg viewBox='0 0 100 100' preserveAspectRatio='none'>
+								<path d='M4,2 L98,2 98,96 4,2z' fill='#ecfbffcc'/>
+							</svg>
+						</span>
+					</div>
+					<div class="backward tapper">
+						<span class="txt">0 S</span>
+						<span class="icon" style="--dir: -1;">
+							<svg viewBox='0 0 100 100' preserveAspectRatio='none'>
+								<path d='M2,4 L2,98 96,98 2,4z' fill='#ecfbffcc'/>
+							</svg>
+						</span>
+					</div>
 				</div>
 			</section>
 			<iframe name="downFrame" style="display: none;" id="mdown-holder"></iframe>
