@@ -755,9 +755,9 @@ body[theme='blackhole'] #stick-menu
 	opacity: 0;
 	z-index: 8;
 	display: flex;
-	position: fixed;
 	min-width: 100vw;
 	min-height: 100vh;
+	position: absolute;
 	visibility: hidden;
 	align-items: center;
 	flex-direction: column;
@@ -792,7 +792,7 @@ body[theme="natural"] #pop-box
 
 #pop-box > span
 {
-	top: 14px;
+	top: 58px;
 	z-index: 5;
 	width: 32px;
 	display: flex;
@@ -883,7 +883,8 @@ body[theme="natural"] #pop-box
 #pop-box > div.active
 {
 	display: flex;
-	margin-top: 20px;
+	margin-top: 65px;
+	margin-bottom: 40px;
 }
 
 hr
