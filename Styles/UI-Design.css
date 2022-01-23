@@ -464,6 +464,7 @@ body[theme='blackhole'] #list-page
 body[theme='killer'] #watch-page
 {
 	--clrtW: #ffb0b0;
+	--cbW: #311a3eeb;
 	--bcW: #ff1eddcc;
 	--bsW: #2a030366;
 	--bgW-1: #190d38a1;
@@ -477,6 +478,7 @@ body[theme='killer'] #watch-page
 body[theme='natural'] #watch-page
 {
 	--clrtW: #b0ffc1;
+	--cbW: #303e1aeb;
 	--bcW: #77ad13cc;
 	--bsW: #042a0366;
 	--bgW-1: #304711a1;
@@ -490,6 +492,7 @@ body[theme='natural'] #watch-page
 body[theme='blackhole'] #watch-page
 {
 	--clrtW: #b1bdf5;
+	--cbW: #202027eb;
 	--bcW: #474552cc;
 	--bsW: #1f1f2b66;
 	--bgW-1: #313131a1;
@@ -753,7 +756,7 @@ body[theme='blackhole'] #watch-page
 	text-align: center;
 	position: absolute;
 	align-items: center;
-	background: #3d5c68cf;
+	background: var(--cbW);
 	justify-content: center;
 	transform: translateY(-110%);
 	border-radius: 10px 10px 40px 40px;

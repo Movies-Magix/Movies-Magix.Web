@@ -34,14 +34,15 @@ $(document).ready(function()
 	
 	($(window).add('#list-page .movs')).on("scroll", function()
 	{
+		const MaxSH = Math.max(window.scrollY, $('#list-page .movs')[0].scrollTop);
 		$('header').toggleClass('sticky', !this.scrollTop && window.scrollY > 50);
-		$('#go-to-top').toggleClass('active', (this.scrollTop ?? window.scrollY) > 50);
+		$('#go-to-top').toggleClass('active', MaxSH > 50);
 	});
 
 	$('#go-to-top').on('click', function()
 	{
-		if (PageIndex != 2) window.scrollTo({ top: 0, behavior: 'smooth' });
-		else $('#list-page .movs')[0].scrollTo({ top: 0, behavior: 'smooth' });
+		window.scrollTo({ top: 0, behavior: 'smooth' });
+		$('#list-page .movs')[0].scrollTo({ top: 0, behavior: 'smooth' });
 	});
 
 	$(window).on('keydown', function(KdE)
@@ -521,6 +522,19 @@ async function ManageRequest(Code)
 				const ErPnl = $('#pop-box .report'), InCode = parseInt(ErPnl.find('.sec-bar').attr('pos')),
 				ESub = ErPnl.find('.area input').eq(0).val(), EDescp = ErPnl.find('.area input').eq(1).val();
 
+				if (InCode < 1) return;
+				if (!ESub || ESub.length < 5 || ESub.length > 100)
+				{
+					DisplayPopup('Invalid Subject', 'Subject should be to the point about the error and must lie in the range of 5 to 100 characters in length. Please try again', 'Okay', 1);
+					return;
+				}
+
+				if (!EDescp || !EDescp.length < 10 || EDescp.length > 1024)
+				{
+					DisplayPopup('Invalid Description Provided', 'Please describe how and when the error occured in brief but please stay in the range of 10 to 1024 characters while writing the description.', 'Okay', 1);
+					return;
+				}
+
 				StartAnimation('Reporting');
 				const RptReq = await fetch('/api/Error',
 				{
@@ -539,6 +553,24 @@ async function ManageRequest(Code)
 			case 2:
 				const RqPnl = $('#pop-box .request'), MNm = RqPnl.find('.area input').eq(0).val(),
 				ILink = RqPnl.find('.area input').eq(1).val(), Extras = RqPnl.find('.area input').eq(2).val();
+
+				if (!MNm || MNm.length < 5 || MNm.length > 100)
+				{
+					DisplayPopup("Invalid Movie Name", "That not seems like a valid name for a movie, please check to make sure that it is in the range of 5 to 100 characters in length. Please try again!", "Okay", 1);
+					return;
+				}
+
+				if (!ILink || ILink.length > 50 || !ILink.includes('imdb.com/title/'))
+				{
+					DisplayPopup("Invalid IMDB Link", "This is not a valid link to IMDB movie title! to get the valid one search on google in format of '<b>Your-Movie-Name IMDB title</b>'; Please note that IMDB title link contains '<b>imdb.com/title/</b>' in it. Please rectify the error and then try again!", "Okay", 1);
+					return;
+				}
+
+				if (Extras && Extras.length > 256)
+				{
+					DisplayPopup('Thoughts Too Long', 'Looks like you have huge idea to share but currently we didn\'t support such a large text, please explain your thoughts in less than 256 characters!', 'Okay', 1);
+					return;
+				}
 
 				StartAnimation('Requesting');
 				const ReqReq = await fetch('/api/Movie',
@@ -689,7 +721,7 @@ class PlayerHandler
 		MmxPlayer = null, PInit = 0, IsPsdBefore = true,
 		SyncedTM = 0;
 
-		this.InitElements = function (Catg, MNam, MObj)
+		this.InitElements = function(Catg, MNam, MObj)
 		{
 			let PWch = $('#watch-page .wrapper'), BaseUri = '/media/' + Catg + '/' + MNam;
 			PWch.find('h2.mov-title').text(DeSanitize(MNam));
@@ -804,7 +836,7 @@ class PlayerHandler
 			}, 100);
 		};
 
-		this.InPlayerSetup = function ()
+		this.InPlayerSetup = function()
 		{
 			if (Exec) return; else Exec = true;
 			let IsPlyrPaused = null, IsSeeking = false,
@@ -818,7 +850,7 @@ class PlayerHandler
 				TOutMM = setTimeout(() => Sender.removeClass('active'), 3000);
 			});
 
-			$(InPlayer).on('dblclick click', function (E)
+			$(InPlayer).on('dblclick click', function(E)
 			{
 				E.stopPropagation();
 				if (CastPnlActive || !MmxPlayer) return;
@@ -871,7 +903,7 @@ class PlayerHandler
 			}
 		};
 
-		this.ToggleCastPanel = function (ICode)
+		this.ToggleCastPanel = function(ICode)
 		{
 			if (ICode)
 			{
@@ -890,7 +922,7 @@ class PlayerHandler
 			}
 		};
 
-		this.OnKeyDown = function (Action)
+		this.OnKeyDown = function(Action)
 		{
 			if (MmxPlayer)
 			{
@@ -910,19 +942,26 @@ class PlayerHandler
 			}
 		};
 
-		this.Dispose = function ()
+		this.Dispose = function()
 		{
-			$('#watch-page .wrapper').append($('#watch-page .in-plyr').remove());
-			$('#watch-page .in-plyr').off('dblclick click');
-			clearInterval(Tmr);
+			$('#watch-page .in-plyr .cast-panel')
+			.removeClass('show');
+			setTimeout(() =>
+			{
+				$('#watch-page .wrapper').append($('#watch-page .in-plyr').remove());
+				$('#watch-page .in-plyr .cast-panel .tiles').empty();
+				$('#watch-page .in-plyr').off('mousemove click');
+				$('#watch-page .in-plyr').off('dblclick click');
+				clearInterval(Tmr);
 
-			if (MmxPlayer) MmxPlayer.destroy(function ()
-				{
-					MmxPlayer.pause(); MmxPlayer = null;
-					$('#watch-page video source').remove();
-					$('#watch-page video.player').get(0).load();
-				});
-			VidHandler = null;
+				if (MmxPlayer) MmxPlayer.destroy(function ()
+					{
+						MmxPlayer.pause(); MmxPlayer = null;
+						$('#watch-page video source').remove();
+						$('#watch-page video.player').get(0).load();
+					});
+				VidHandler = null;
+			}, 300);
 		};
 	}
 };
