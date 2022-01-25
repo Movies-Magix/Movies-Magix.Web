@@ -794,7 +794,7 @@ class PlayerHandler
 					}
 				});
 
-				MmxPlayer.once('loadedmetadata', async function()
+				MmxPlayer.once('loadedmetadata', function()
 				{
 					if (MObj.HasHistory)
 					{
@@ -809,7 +809,7 @@ class PlayerHandler
 						setTimeout(() => { MmxPlayer.muted = false; }, 100);
 					}
 
-					Tmr = setInterval(() =>
+					Tmr = setInterval(async () =>
 					{
 						const CurrTime = MmxPlayer.currentTime;
 						if (CurrTime > 4 && CurrTime != SyncedTM)
