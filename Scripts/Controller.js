@@ -11,10 +11,7 @@ PrevHisState = '';
 GlobTrigger = null;
 PreventLoop = false;
 IsNavReffered = false;
-const OLoc = location.origin + '/',
-Uris = { Api: OLoc.replace('://', '://api.'), Media: OLoc.replace('://', '://media.'),
-		Auth: OLoc.replace('://', '://auth.'), Static: OLoc.replace('://', '://static.') };
-
+const StaticURI = location.origin.replace('://', '://static.') + '/';
 // #endregion Global Declarations
 
 // #region Startup
@@ -75,7 +72,7 @@ $(window).on("popstate", async function(PSE)
 {
 	try
 	{
-		const FthStatus = await fetch(Uris.Auth + 'status');
+		const FthStatus = await fetch('/auth/Status');
 		InitData = await FthStatus.json();
 		IsLogged = InitData.IsIn
 		&& !InitData.Blocked;
@@ -325,7 +322,7 @@ async function FetchAndPopulate(LCateg)
 	if (CchMeta && CchCatData && CchMeta[LCateg])
 		CatgH = CchMeta[LCateg];
 
-	var LstResp = await fetch(Uris.Api + 'List',
+	var LstResp = await fetch('/api/List',
 	{
 		headers:
 		{
@@ -503,7 +500,7 @@ async function ManageRequest(Code)
 					}
 
 					StartAnimation('Saving');
-					let UpdtReq = await fetch(Uris.Api + 'Settings',
+					let UpdtReq = await fetch('/api/Settings',
 					{
 						method: 'POST',
 						headers: { 'content-type': 'application/json' },
@@ -544,7 +541,7 @@ async function ManageRequest(Code)
 				}
 
 				StartAnimation('Reporting');
-				const RptReq = await fetch(Uris.Api + 'Error',
+				const RptReq = await fetch('/api/Error',
 				{
 					method: 'POST',
 					headers: { 'content-type': 'application/json' },
@@ -581,7 +578,7 @@ async function ManageRequest(Code)
 				}
 
 				StartAnimation('Requesting');
-				const ReqReq = await fetch(Uris.Api + 'Movie',
+				const ReqReq = await fetch('/api/Movie',
 				{
 					method: 'POST',
 					headers: { 'content-type': 'application/json' },
@@ -654,7 +651,7 @@ function HandleSubmission(IsLogin, Evt)
 
 	setTimeout(() => { Canceller.abort(); }, 5000);
 	StartAnimation(IsLogin ? 'Verifying' : 'Creating');
-	fetch(Uris.Auth + (IsLogin ? 'Login' : 'Register'), ReqInit)
+	fetch('/auth/' + (IsLogin ? 'Login' : 'Register'), ReqInit)
 		.then(async function(AuthRes) { GoodResponse(AuthRes).then(XRsp => {
 			if (XRsp) { InitHomePg(XRsp); $('#auth-page form input').val(''); } } ); }).catch(InformNETError);
 }
@@ -663,8 +660,8 @@ function BuildMovBox(CurCatg, MovName, MovDetail)
 {
 	var ResPath = CurCatg + '/' + MovName;
 	let MCard = $('<div/>', { class: 'movie-card', onclick: 'LoadPg(3, \'' + ResPath + '\')' });
-	var TLImg = $('<img/>', { src: Uris.Static + CurCatg.toLowerCase() + '-mmx/' + MovName + '.jpg',
-	alt: 'Movie Poster' }), TLTitle = $('<span/>'),
+	var TLImg = $('<img/>', { src: StaticURI + CurCatg.toLowerCase() + '-mmx/' +
+	MovName + '.jpg', alt: 'Movie Poster' }), TLTitle = $('<span/>'),
 	TLMInf = $('<div/>', { class: 'mv-info' });
 	
 	var SLLang = $('<b/>', { class: 'lang' }),
@@ -731,7 +728,7 @@ class PlayerHandler
 
 		this.InitElements = function(Catg, MNam, MObj)
 		{
-			let PWch = $('#watch-page .wrapper'), BaseUri = Uris.Media + Catg + '/' + MNam;
+			let PWch = $('#watch-page .wrapper'), BaseUri = '/media/' + Catg + '/' + MNam;
 			PWch.find('h2.mov-title').text(DeSanitize(MNam));
 			PWch.find('.video-container').empty();
 			SecParam = Catg + '/' + MNam;
@@ -745,7 +742,7 @@ class PlayerHandler
 			});
 
 			if (Settings.Behaviour != 1) VidCtrl.attr('preload', 'metadata');
-			VidCtrl.attr('data-poster', Uris.Static + Catg.toLowerCase() + '-mmx/' + MNam + '.jpg');
+			VidCtrl.attr('data-poster', StaticURI + Catg.toLowerCase() + '-mmx/' + MNam + '.jpg');
 			VidCtrl.append($('<source/>', { src: BaseUri + '.mp4', type: 'video/mp4' }));
 			PWch.find('.video-container').append(VidCtrl);
 
@@ -768,9 +765,9 @@ class PlayerHandler
 				MmxPlayer = new Plyr('#watch-page video.player',
 				{
 					keyboard: { focused: false, global: false },
-					blankVideo: Uris.Static + 'assets-mmx/Blank.mp4',
-					iconUrl: Uris.Static + 'assets-mmx/Plyr.svg',
 					storage: { enabled: true, key: "Plyr" },
+					blankVideo: '/media/Assets/Blank.mp4',
+					iconUrl: '/media/assets/Plyr.svg',
 					listeners:
 					{
 						fullscreen: function ()
@@ -818,7 +815,7 @@ class PlayerHandler
 						{
 							let LHash = location.hash.split('/');
 
-							fetch(Uris.Media + 'Log',
+							fetch('/media/Log',
 							{
 								method: 'POST',
 								headers: { 'content-type': 'application/json' },
@@ -832,11 +829,11 @@ class PlayerHandler
 				$('#watch-page .plyr__video-wrapper').append(
 					$('#watch-page .in-plyr').remove());
 				
-				const CastLOC = Uris.Static + '/casts-mmx/';
+				 + '/casts-mmx/';
 				MObj.Casts.forEach((CastNM) =>
 				{
-					let CstImg = $('<img/>', { style: "background-image: url('" + CastLOC +
-					CastNM.replace(/ /g, '-') + ".jpg'), url('Images/Img-404.jpg');" }), CstB = $('<b/>'),
+					let CstImg = $('<img/>', { style: "background-image: url('" + StaticURI +
+					'casts-mmx/' + CastNM.replace(/ /g, '-') + ".jpg'), url('Img-404.jpg');" }), CstB = $('<b/>'),
 					CstTile = $('<div/>', { class: 'cast' }); CstB.text(CastNM); CstTile.append(CstImg, CstB);
 					PWch.find('.in-plyr .cast-panel .tiles').append(CstTile);
 				});
@@ -975,7 +972,7 @@ class PlayerHandler
 
 async function DownloadMov()
 {
-	const DldFth = await fetch(Uris.Media + SecParam +
+	const DldFth = await fetch('/media/' + SecParam +
 	'.mp4', { headers: { 'X-MType':'Download' } });
 	
 	if (XResp = await GoodResponse(DldFth))
@@ -1000,7 +997,7 @@ function CleanUP()
 function LogMeOut()
 {
 	StartAnimation('Removing');
-	fetch(Uris.Auth + 'Session', { method: 'DELETE' })
+	fetch('/auth/Session', { method: 'DELETE' })
 	.then(DestroySession).catch(InformNETError);
 }
 
