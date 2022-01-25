@@ -663,7 +663,7 @@ function BuildMovBox(CurCatg, MovName, MovDetail)
 {
 	var ResPath = CurCatg + '/' + MovName;
 	let MCard = $('<div/>', { class: 'movie-card', onclick: 'LoadPg(3, \'' + ResPath + '\')' });
-	var TLImg = $('<img/>', { src: Uris.Static + CurCatg.toLowerCase() + '-mmx/' + ResPath + '.jpg',
+	var TLImg = $('<img/>', { src: Uris.Static + CurCatg.toLowerCase() + '-mmx/' + MovName + '.jpg',
 	alt: 'Movie Poster' }), TLTitle = $('<span/>'),
 	TLMInf = $('<div/>', { class: 'mv-info' });
 	
