@@ -744,8 +744,8 @@ class PlayerHandler
 				playsinline: '',
 			});
 
-			VidCtrl.attr('data-poster', BaseUri + '.jpg');
 			if (Settings.Behaviour != 1) VidCtrl.attr('preload', 'metadata');
+			VidCtrl.attr('data-poster', Uris.Static + Catg.toLowerCase() + '-mmx/' + MNam + '.jpg');
 			VidCtrl.append($('<source/>', { src: BaseUri + '.mp4', type: 'video/mp4' }));
 			PWch.find('.video-container').append(VidCtrl);
 
@@ -836,7 +836,7 @@ class PlayerHandler
 				MObj.Casts.forEach((CastNM) =>
 				{
 					let CstImg = $('<img/>', { style: "background-image: url('" + CastLOC +
-					CastNM.replace(/ /g, '-') + ".jpg'), url('Img-404.jpg');" }), CstB = $('<b/>'),
+					CastNM.replace(/ /g, '-') + ".jpg'), url('Images/Img-404.jpg');" }), CstB = $('<b/>'),
 					CstTile = $('<div/>', { class: 'cast' }); CstB.text(CastNM); CstTile.append(CstImg, CstB);
 					PWch.find('.in-plyr .cast-panel .tiles').append(CstTile);
 				});
