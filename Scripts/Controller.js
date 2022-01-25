@@ -11,6 +11,9 @@ PrevHisState = '';
 GlobTrigger = null;
 PreventLoop = false;
 IsNavReffered = false;
+const OLoc = location.origin + '/',
+Uris = { Api: OLoc.replace('://', '://api.'), Media: OLoc.replace('://', '://media.'),
+		Auth: OLoc.replace('://', '://auth.'), Static: OLoc.replace('://', '://static.') };
 
 // #endregion Global Declarations
 
@@ -68,18 +71,23 @@ $(document).ready(function()
 	$('#stick-menu > span').on("click", function() { $('#stick-menu').removeClass('show'); });
 });
 
-$(window).on("popstate", function(PSE)
+$(window).on("popstate", async function(PSE)
 {
-	var InitTxt = $('div#pre-auth').text(), Errored = false;
-	SecID = -1, LocHsh = location.hash, SecHsh = LocHsh.split('/');
-
-	if (InitTxt)
+	try
 	{
-		$('div#pre-auth').remove();
-		InitData = JSON.parse(InitTxt);
-		IsLogged = InitData.IsIn && !InitData.Blocked;
+		const FthStatus = await fetch(Uris.Auth + 'status');
+		InitData = await FthStatus.json();
+		IsLogged = InitData.IsIn
+		&& !InitData.Blocked;
+	}
+	catch (NErrs)
+	{
+		InformNETError(NErrs);
+		return;
 	}
 
+	let Errored = false, SecID = -1,
+	LocHsh = location.hash, SecHsh = LocHsh.split('/');
 	if (!IsLogged) { Visit(0); FirstLoad = true; return; }
 	if (LocHsh.indexOf('/') < 0 || SecHsh.length == 1 || SecHsh[1] == "Home") SecID = 1;
 	else if (SecHsh[1] == "List")
@@ -317,7 +325,7 @@ async function FetchAndPopulate(LCateg)
 	if (CchMeta && CchCatData && CchMeta[LCateg])
 		CatgH = CchMeta[LCateg];
 
-	var LstResp = await fetch('/api/List',
+	var LstResp = await fetch(Uris.Api + 'List',
 	{
 		headers:
 		{
@@ -495,7 +503,7 @@ async function ManageRequest(Code)
 					}
 
 					StartAnimation('Saving');
-					let UpdtReq = await fetch('/api/Settings',
+					let UpdtReq = await fetch(Uris.Api + 'Settings',
 					{
 						method: 'POST',
 						headers: { 'content-type': 'application/json' },
@@ -536,7 +544,7 @@ async function ManageRequest(Code)
 				}
 
 				StartAnimation('Reporting');
-				const RptReq = await fetch('/api/Error',
+				const RptReq = await fetch(Uris.Api + 'Error',
 				{
 					method: 'POST',
 					headers: { 'content-type': 'application/json' },
@@ -573,7 +581,7 @@ async function ManageRequest(Code)
 				}
 
 				StartAnimation('Requesting');
-				const ReqReq = await fetch('/api/Movie',
+				const ReqReq = await fetch(Uris.Api + 'Movie',
 				{
 					method: 'POST',
 					headers: { 'content-type': 'application/json' },
@@ -646,7 +654,7 @@ function HandleSubmission(IsLogin, Evt)
 
 	setTimeout(() => { Canceller.abort(); }, 5000);
 	StartAnimation(IsLogin ? 'Verifying' : 'Creating');
-	fetch('/auth/' + (IsLogin ? 'Login' : 'Register'), ReqInit)
+	fetch(Uris.Auth + (IsLogin ? 'Login' : 'Register'), ReqInit)
 		.then(async function(AuthRes) { GoodResponse(AuthRes).then(XRsp => {
 			if (XRsp) { InitHomePg(XRsp); $('#auth-page form input').val(''); } } ); }).catch(InformNETError);
 }
@@ -655,7 +663,7 @@ function BuildMovBox(CurCatg, MovName, MovDetail)
 {
 	var ResPath = CurCatg + '/' + MovName;
 	let MCard = $('<div/>', { class: 'movie-card', onclick: 'LoadPg(3, \'' + ResPath + '\')' });
-	var TLImg = $('<img/>', { src: '/media/' + ResPath + '.jpg',
+	var TLImg = $('<img/>', { src: Uris.Static + CurCatg.toLowerCase() + '-mmx/' + ResPath + '.jpg',
 	alt: 'Movie Poster' }), TLTitle = $('<span/>'),
 	TLMInf = $('<div/>', { class: 'mv-info' });
 	
@@ -723,7 +731,7 @@ class PlayerHandler
 
 		this.InitElements = function(Catg, MNam, MObj)
 		{
-			let PWch = $('#watch-page .wrapper'), BaseUri = '/media/' + Catg + '/' + MNam;
+			let PWch = $('#watch-page .wrapper'), BaseUri = Uris.Media + Catg + '/' + MNam;
 			PWch.find('h2.mov-title').text(DeSanitize(MNam));
 			PWch.find('.video-container').empty();
 			SecParam = Catg + '/' + MNam;
@@ -760,9 +768,9 @@ class PlayerHandler
 				MmxPlayer = new Plyr('#watch-page video.player',
 				{
 					keyboard: { focused: false, global: false },
+					blankVideo: Uris.Static + 'assets-mmx/Blank.mp4',
+					iconUrl: Uris.Static + 'assets-mmx/Plyr.svg',
 					storage: { enabled: true, key: "Plyr" },
-					blankVideo: '/media/Assets/Blank.mp4',
-					iconUrl: '/media/assets/Plyr.svg',
 					listeners:
 					{
 						fullscreen: function ()
@@ -810,7 +818,7 @@ class PlayerHandler
 						{
 							let LHash = location.hash.split('/');
 
-							fetch('/media/Log',
+							fetch(Uris.Media + 'Log',
 							{
 								method: 'POST',
 								headers: { 'content-type': 'application/json' },
@@ -824,8 +832,7 @@ class PlayerHandler
 				$('#watch-page .plyr__video-wrapper').append(
 					$('#watch-page .in-plyr').remove());
 				
-				const CastLOC = location.origin.replace('://',
-					'://s3.') + '/casts-mmx/';
+				const CastLOC = Uris.Static + '/casts-mmx/';
 				MObj.Casts.forEach((CastNM) =>
 				{
 					let CstImg = $('<img/>', { style: "background-image: url('" + CastLOC +
@@ -968,7 +975,7 @@ class PlayerHandler
 
 async function DownloadMov()
 {
-	const DldFth = await fetch('/media/' + SecParam +
+	const DldFth = await fetch(Uris.Media + SecParam +
 	'.mp4', { headers: { 'X-MType':'Download' } });
 	
 	if (XResp = await GoodResponse(DldFth))
@@ -993,7 +1000,7 @@ function CleanUP()
 function LogMeOut()
 {
 	StartAnimation('Removing');
-	fetch('/auth/Session', { method: 'DELETE' })
+	fetch(Uris.Auth + 'Session', { method: 'DELETE' })
 	.then(DestroySession).catch(InformNETError);
 }
 
