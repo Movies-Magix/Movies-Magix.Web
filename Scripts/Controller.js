@@ -661,7 +661,7 @@ function BuildMovBox(CurCatg, MovName, MovDetail)
 	var ResPath = CurCatg + '/' + MovName;
 	let MCard = $('<div/>', { class: 'movie-card', onclick: 'LoadPg(3, \'' + ResPath + '\')' });
 	var TLImg = $('<img/>', { src: StaticURI + CurCatg.toLowerCase() + '-mmx/' +
-	MovName + '.jpg', alt: 'Movie Poster' }), TLTitle = $('<span/>'),
+	Normalize(MovName) + '.jpg', alt: 'Movie Poster' }), TLTitle = $('<span/>'),
 	TLMInf = $('<div/>', { class: 'mv-info' });
 	
 	var SLLang = $('<b/>', { class: 'lang' }),
@@ -741,8 +741,9 @@ class PlayerHandler
 				playsinline: '',
 			});
 
+			VidCtrl.attr('data-poster', StaticURI + Catg
+			.toLowerCase() + '-mmx/' + Normalize(MNam) + '.jpg');
 			if (Settings.Behaviour != 1) VidCtrl.attr('preload', 'metadata');
-			VidCtrl.attr('data-poster', StaticURI + Catg.toLowerCase() + '-mmx/' + MNam + '.jpg');
 			VidCtrl.append($('<source/>', { src: BaseUri + '.mp4', type: 'video/mp4' }));
 			PWch.find('.video-container').append(VidCtrl);
 
@@ -764,10 +765,10 @@ class PlayerHandler
 				if (typeof Plyr == 'undefined') return; else clearInterval(PInit);
 				MmxPlayer = new Plyr('#watch-page video.player',
 				{
+					blankVideo: StaticURI + 'assets-mmx/Blank.mp4',
 					keyboard: { focused: false, global: false },
+					iconUrl: StaticURI + 'assets-mmx/Plyr.svg',
 					storage: { enabled: true, key: "Plyr" },
-					blankVideo: '/media/Assets/Blank.mp4',
-					iconUrl: '/media/assets/Plyr.svg',
 					listeners:
 					{
 						fullscreen: function ()
@@ -793,7 +794,7 @@ class PlayerHandler
 					}
 				});
 
-				MmxPlayer.once('loadedmetadata', function()
+				MmxPlayer.once('loadedmetadata', async function()
 				{
 					if (MObj.HasHistory)
 					{
@@ -813,14 +814,20 @@ class PlayerHandler
 						const CurrTime = MmxPlayer.currentTime;
 						if (CurrTime > 4 && CurrTime != SyncedTM)
 						{
-							let LHash = location.hash.split('/');
-
-							fetch('/media/Log',
+							try
 							{
-								method: 'POST',
-								headers: { 'content-type': 'application/json' },
-								body: '{"Name": "' + LHash[LHash.length - 1] + '", "Time": ' + CurrTime + '}'
-							}).then((Resp) => { if (Resp.ok) SyncedTM = CurrTime; }).catch(() => { });
+								let LHash = location.hash.split('/'),
+								LogRsp = await fetch('/media/Log',
+								{
+									method: 'POST',
+									headers: { 'content-type': 'application/json' },
+									body: '{"Name": "' + LHash[LHash.length - 1] + '", "Time": ' + CurrTime + '}'
+								});
+								
+								if (await GoodResponse(LogRsp))
+									SyncedTM = CurrTime;
+							}
+							catch (LEr) { InformNETError(LEr); }
 						}
 					}, 60000);
 				});
@@ -833,7 +840,7 @@ class PlayerHandler
 				MObj.Casts.forEach((CastNM) =>
 				{
 					let CstImg = $('<img/>', { style: "background-image: url('" + StaticURI +
-					'casts-mmx/' + CastNM.replace(/ /g, '-') + ".jpg'), url('Img-404.jpg');" }), CstB = $('<b/>'),
+					'casts-mmx/' + Normalize(CastNM) + ".jpg'), url('Images/Img-404.jpg');" }), CstB = $('<b/>'),
 					CstTile = $('<div/>', { class: 'cast' }); CstB.text(CastNM); CstTile.append(CstImg, CstB);
 					PWch.find('.in-plyr .cast-panel .tiles').append(CstTile);
 				});
@@ -956,6 +963,7 @@ class PlayerHandler
 				$('#watch-page .in-plyr .cast-panel .tiles').empty();
 				$('#watch-page .in-plyr').off('mousemove click');
 				$('#watch-page .in-plyr').off('dblclick click');
+				$('#watch-page .in-plyr').css('z-index', '4');
 				clearInterval(Tmr);
 
 				if (MmxPlayer) MmxPlayer.destroy(function ()
@@ -972,15 +980,19 @@ class PlayerHandler
 
 async function DownloadMov()
 {
-	const DldFth = await fetch('/media/' + SecParam +
-	'.mp4', { headers: { 'X-MType':'Download' } });
-	
-	if (XResp = await GoodResponse(DldFth))
+	try
 	{
-		$('iframe').attr('src', XResp.URL);
-		setTimeout(() => { DisplayPopup('Download Started',
-		'Hurrah! the requested movie is being downloaded, Enjoy!', 'Okay', 0) }, 2000);
+		const DldFth = await fetch('/media/' + SecParam +
+		'.mp4', { headers: { 'X-MType':'Download' } });
+		
+		if (XResp = await GoodResponse(DldFth))
+		{
+			$('iframe').attr('src', XResp.URL);
+			setTimeout(() => { DisplayPopup('Download Started',
+			'Hurrah! the requested movie is being downloaded, Enjoy!', 'Okay', 0) }, 2000);
+		}
 	}
+	catch (DEr) { InformNETError(DEr); }
 }
 
 // #endregion Plyr & Watch Functions
@@ -1018,6 +1030,18 @@ function AlterTheme()
 	}
 }
 
+function DeSanitize(Title)
+{
+    if (!Title) return '';
+	return Title.replace(/\+\+/g, '.')
+		.replace(/-/g, ' ')
+		.replace(/@@/g, '$')
+		.replace(/{{/g, '[')
+		.replace(/}}/g, ']')
+		.replace(/\~\|\|/g, '/')
+		.replace(/\|\|\~/g, '\\');
+}
+
 function DestroySession(Evt = null)
 {
 	StartAnimation();
@@ -1037,16 +1061,6 @@ function DestroySession(Evt = null)
 	}, 1000);
 }
 
-function DeSanitize(Title)
-{
-    if (!Title) return '';
-	return Title.replace(/\+\+/g, '.')
-		.replace(/-/g, ' ')
-		.replace(/@@/g, '$')
-		.replace(/{{/g, '[')
-		.replace(/}}/g, ']')
-		.replace(/\~\|\|/g, '/')
-		.replace(/\|\|\~/g, '\\');
-}
+Normalize = (Name = '') => DeSanitize(Name).replace(/ /g, '-');
 
 // #endregion Utilities

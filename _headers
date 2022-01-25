@@ -1,0 +1,22 @@
+/*
+	X-XSS-Protection: 0
+	X-Robots-Tag: noindex
+	X-Frame-Options: DENY
+	Referrer-Policy: no-referrer
+	X-Content-Type-Options: nosniff
+	Strict-Transport-Security: max-age=31536000; includeSubDomains
+
+/Icon.png
+	Cache-Control: max-age=31536000; must-revalidate
+
+/Images/*
+	Cache-Control: max-age=2592000; must-revalidate
+
+/Scripts/Plyr-Player.js
+	Cache-Control: max-age=31536000; must-revalidate
+
+/Styles/Plyr-Player.css
+	Cache-Control: max-age=31536000; must-revalidate
+
+/Scripts/Zepto-Min.js
+	Cache-Control: max-age=31536000; must-revalidate
