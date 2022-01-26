@@ -35,7 +35,7 @@ $(document).ready(function()
 	($(window).add('#list-page .movs')).on("scroll", function()
 	{
 		const MaxSH = Math.max(window.scrollY, $('#list-page .movs')[0].scrollTop);
-		$('header').toggleClass('sticky', !this.scrollTop && window.scrollY > 50);
+		$('header').toggleClass('sticky', window.scrollY > 50);
 		$('#go-to-top').toggleClass('active', MaxSH > 50);
 	});
 
@@ -189,9 +189,10 @@ function Visit(PCode)
 		}
 
 		PageIndex = PCode;
+		$('#go-to-top').removeClass('active');
 		document.title = TextTitle + 'Movies-Magix';
-		setTimeout(() => { StopAnimation(); }, 540);
-	}, 260);
+		setTimeout(() => { StopAnimation(); }, 580);
+	}, 320);
 }
 
 var NavINHistory = (function()
