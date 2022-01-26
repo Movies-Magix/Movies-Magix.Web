@@ -171,8 +171,9 @@ function Visit(PCode)
 					break;
 
 				case 2:
+					$('#list-page .movs')[0].scrollTo({ top: 0, behavior: 'smooth' });
 					TextTitle = 'Movies in ' + SecParam + ' Category || ';
-					$('#list-page').css('display', 'flex');	
+					$('#list-page').css('display', 'flex');
 					$('#list-page').addClass('show');
 					NavINHistory('List/' + SecParam);
 					break;
@@ -415,6 +416,10 @@ function InformNETError(Er)
 
 function ShowModal(MCode)
 {
+	// [To-Do] => Improve the Modal Box UI and design
+	DisplayPopup('Feature Unavailable', 'Sorry but currenlty we are working hard to improve the UI of dialog box untill then this feature will remain disabled! An update will be pushed very soon, kindly maintain your patience.', 'Okay', 2);
+	return;
+
 	if (MCode > 2) MCode = 0;
 	$('#pop-box > div').removeClass('active');
 	$('#pop-box > div').eq(MCode).addClass('active');
