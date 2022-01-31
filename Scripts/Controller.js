@@ -189,6 +189,7 @@ function Visit(PCode)
 			}
 		}
 
+		MapMenuDelay();
 		PageIndex = PCode;
 		$('#go-to-top').removeClass('active');
 		document.title = TextTitle + 'Movies-Magix';
@@ -407,19 +408,16 @@ function DisplayPopup(Title, Msg, Btn, Type, OnConf = null)
 	}, 500);
 }
 
-function InformNETError(Er)
+function InformNETError(ErData)
 {
-	StopAnimation(); console.log(Er);
-	if (Er.name == "SecurityError") DisplayPopup('Permissions Denied', 'Either some permissions for this site is missing or you are in Incognito mode. Please grant permissions from the tools section of the address bar or leave the Incognito mode.', 'Okay', 2);
-	else DisplayPopup("Network Issue", 'It looks like your internet connection is unstable, kindly check to make sure that your mobile data is on or you are connected to a Wi-Fi network & then try again',  "Okay", 2);
+	StopAnimation(); console.error('Error Occured', '\n', ErData);
+	if (ErData.name == "SecurityError") DisplayPopup('Permissions Denied', 'Either some permissions is missing or you are in Incognito mode. Please grant required permissions from your browser Settings or try leaving the In-Private mode.', 'Okay', 2);
+	else if (ErData.message.includes('fetch')) DisplayPopup("Network Issue", 'It looks like your internet connection is unstable, please make sure that your mobile data is turned ON or you are connected to a good Wi-Fi network & then try again',  "Okay", 1);
+	else DisplayPopup("Unknown Issue", 'Something went wrong while handling a task. Please ensure that your browser is updated to it\'s latest version. If the issue still persists then consider reporting the error or contact the owner for help.',  "Okay", 2);
 }
 
 function ShowModal(MCode)
 {
-	// [To-Do] => Improve the Modal Box UI and design
-	DisplayPopup('Feature Unavailable', 'Sorry but currenlty we are working hard to improve the UI of dialog box untill then this feature will remain disabled! An update will be pushed very soon, kindly maintain your patience.', 'Okay', 2);
-	return;
-
 	if (MCode > 2) MCode = 0;
 	$('#pop-box > div').removeClass('active');
 	$('#pop-box > div').eq(MCode).addClass('active');
@@ -784,7 +782,6 @@ class PlayerHandler
 								if (IsOnPhone()) screen.orientation.unlock();
 								setTimeout(() => { MmxPlayer.fullscreen.exit(); }, 1000);
 							}
-
 							else
 							{
 								MmxPlayer.fullscreen.enter();
@@ -1034,6 +1031,14 @@ function AlterTheme()
 		case 2: $('body').attr('theme', 'blackhole'); break;
 		case 3: $('body').attr('theme', 'natural'); break;
 	}
+}
+
+function MapMenuDelay()
+{
+	const ActiveMT = $('#stick-menu > span:not(.hidden)')
+	.toArray().reverse(), ActiveMTLength = ActiveMT.length;
+	ActiveMT.forEach((Elem, Idx) => { $(Elem).css('--delay',
+	((ActiveMTLength - Idx) * 80) + 'ms'); });
 }
 
 function DeSanitize(Title)

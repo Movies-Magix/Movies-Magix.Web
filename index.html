@@ -27,11 +27,12 @@
 		</div>
 	</div>
 	<div id="pop-box" class>
-		<span onclick="ManageRequest(-1);">
-			<span style="--dir: 1;"></span>
-			<span style="--dir: -1;"></span>
-		</span>
 		<div class="settings active">
+			<svg width="20" height="20" viewBox="0 0 25 25" style="cursor: pointer;"
+				onclick="ManageRequest(-1);" stroke="#ff7c7c" stroke-width="4" stroke-linecap="round">
+				<line x2="25" y2="25"></line>
+				<line x1="25" y2="25"></line>
+			</svg>
 			<b>User Settings</b>
 			<hr class="h">
 			<div class="area">
@@ -61,6 +62,11 @@
 			</div>
 		</div>
 		<div class="report">
+			<svg width="20" height="20" viewBox="0 0 25 25" style="cursor: pointer;"
+				onclick="ManageRequest(-1);" stroke="#ff7c7c" stroke-width="4" stroke-linecap="round">
+				<line x2="25" y2="25"></line>
+				<line x1="25" y2="25"></line>
+			</svg>
 			<b>Report An Error</b>
 			<hr class="h">
 			<div class="area">
@@ -85,6 +91,11 @@
 			</div>
 		</div>
 		<div class="request">
+			<svg width="20" height="20" viewBox="0 0 25 25" style="cursor: pointer;"
+				onclick="ManageRequest(-1);" stroke="#ff7c7c" stroke-width="4" stroke-linecap="round">
+				<line x2="25" y2="25"></line>
+				<line x1="25" y2="25"></line>
+			</svg>
 			<b>Request A Movie</b>
 			<hr class="h">
 			<div class="area">
@@ -113,12 +124,12 @@
 	</header>
 	<div id="go-to-top"><img src="Images/Go-Up.png" alt="Back To Top"/></div>
 	<div id="stick-menu">
-		<span style="--delay: 0.48s" class="home hidden" onclick="LoadPg(1, null);">Goto Homepage</span>
-		<span style="--delay: 0.40s" class="watch hidden" onclick="DownloadMov();">Download Movie</span>
-		<span style="--delay: 0.32s" onclick="ShowModal(1);">Report An Error</span>
-		<span style="--delay: 0.24s" onclick="ShowModal(2);">Request A Movie</span>
-		<span style="--delay: 0.16s" onclick="ShowModal(0);">User Settings</span>
-		<span style="--delay: 0.08s" onclick="LogMeOut();">Logout</span>
+		<span style="--delay:80ms" class="home hidden" onclick="LoadPg(1, null);">Goto Homepage</span>
+		<span style="--delay:160ms" class="watch hidden" onclick="DownloadMov();">Download Movie</span>
+		<span style="--delay:240ms" onclick="ShowModal(1);">Report An Error</span>
+		<span style="--delay:320ms" onclick="ShowModal(2);">Request A Movie</span>
+		<span style="--delay:400ms" onclick="ShowModal(0);">User Settings</span>
+		<span style="--delay:480ms" onclick="LogMeOut();">Logout</span>
 	</div>
 	<div id="sm-on-off" class="hide" onclick="$('#stick-menu').toggleClass('show');">
 		<span style="--dir: 1;"></span>

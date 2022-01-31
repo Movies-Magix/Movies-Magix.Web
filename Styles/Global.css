@@ -32,11 +32,11 @@ header
 	box-shadow: #000000e7 1px 2px 25px -5px;
 	background: #000000ad;
 	position: fixed;
-	top: 0;
 	height: auto;
+	top: 0;
 	left: 0;
 	width: 100%;
-	z-index: 20;
+	z-index: 30;
 	display: flex;
 	padding: 12px 14px;
 	transition: padding 0.2s;
@@ -712,9 +712,9 @@ body[theme='blackhole'] #stick-menu
 .sec-bar
 {
 	height: auto;
-	width: 290px;
+	width: 285px;
 	display: flex;
-	margin: 10px 5px;
+	margin: 10px 2px;
 	position: relative;
 	border-radius: 20px;
 	align-items: center;
@@ -728,7 +728,7 @@ body[theme='blackhole'] #stick-menu
 	margin: 5px;
 	width: 95px;
 	display: block;
-	font-size: 18px;
+	font-size: 17px;
 	cursor: pointer;
 	color: #ffffff;
 	user-select: none;
@@ -738,8 +738,9 @@ body[theme='blackhole'] #stick-menu
 
 .sec-bar div
 {
-	width: 100px;
-	height: 45px;
+	top: -4px;
+	width: 95px;
+	height: 40px;
 	position: absolute;
 	border-radius: 20px;
 	backdrop-filter: blur(1px);
@@ -758,17 +759,28 @@ body[theme='blackhole'] #stick-menu
 	right: 0;
 	bottom: 0;
 	opacity: 0;
-	z-index: 8;
+	z-index: 28;
 	display: flex;
 	overflow: auto;
 	position: fixed;
 	visibility: hidden;
 	align-items: center;
+	scrollbar-width: none;
 	flex-direction: column;
 	justify-content: center;
-	transition: opacity 0.4s ease, visibility 0s 0.5s;
+	transition: opacity 0.2s ease, visibility 0s 0.2s;
 	background: linear-gradient(45deg, var(--bgP-1) 3%, var(--bgP-2) 100%);
 }
+
+#pop-box.display
+{
+	opacity: 1;
+	visibility: visible;
+	margin-bottom: 10px;
+	transition: opacity 0.2s ease, visibility 0s 0s;
+}
+
+#pop-box::-webkit-scrollbar { display: none; }
 
 body[theme="blackhole"] #pop-box
 {
@@ -794,37 +806,17 @@ body[theme="natural"] #pop-box
 	--bgP-3: #2e382df8;
 }
 
-#pop-box > span
-{
-	top: -40%;
-	z-index: 5;
-	width: 32px;
-	cursor: pointer;
-	position: relative;
-}
-
-#pop-box > span > span
-{
-	width: 100%;
-	height: 5px;
-	will-change: left;
-	border-radius: 5px;
-	position: absolute;
-	background-color: #fa3581;
-	transform: rotate(calc(45deg * var(--dir)));
-}
-
 #pop-box > div
 {
-	width: auto;
+	top: 14%;
+	width: 80%;
 	display: none;
+	min-width: 290px;
+	max-width: 315px;
 	overflow: hidden;
-	min-width: 280px;
-	min-height: 400px;
 	padding: 12px 0px;
-	position: relative;
+	position: absolute;
 	text-align: center;
-	height: fit-content;
 	align-items: center;
 	flex-direction: column;
 	justify-content: center;
@@ -834,6 +826,9 @@ body[theme="natural"] #pop-box
 	box-shadow: #6af5e8 0px 1px 10px -2px,
 	#c5e2fb 0px 1px 0px 0px, inset #787c59 0px -10px 20px -8px;
 }
+
+#pop-box > div.active { display: flex; }
+#pop-box > div.active svg { top: 8px; right: 10px; position: absolute; }
 
 #pop-box > div > b
 {
@@ -847,7 +842,7 @@ body[theme="natural"] #pop-box
 #pop-box .area
 {
 	display: flex;
-	margin: 5px 2px;
+	margin: 5px 0px;
 	padding: 4px 0px;
 	align-items: center;
 	flex-direction: column;
@@ -865,7 +860,7 @@ body[theme="natural"] #pop-box
 
 #pop-box .area input
 {
-	min-width: 292px;
+	min-width: 280px;
 	color: #ffffff;
 }
 
@@ -874,20 +869,6 @@ body[theme="natural"] #pop-box
 	width: 150px;
 	color: #c1fcff;
 	background: #2c2c2cb8;
-}
-
-#pop-box.display
-{
-	opacity: 1;
-	visibility: visible;
-	transition: opacity 0.4s ease, visibility 0s 0s;
-}
-
-#pop-box > div.active
-{
-	display: flex;
-	margin-top: 65px;
-	margin-bottom: 40px;
 }
 
 hr
@@ -912,7 +893,7 @@ hr.h
 
 footer
 {
-	z-index: 12;
+	z-index: 30;
 	display: flex;
 	font-size: 18px;
 	padding-bottom: 2px;

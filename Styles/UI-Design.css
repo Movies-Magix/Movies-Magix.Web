@@ -329,6 +329,7 @@ body[theme='blackhole'] #list-page
 	scrollbar-width: 0;
 	height: fit-content;
 	flex-direction: row;
+	scrollbar-width: none;
 	align-items: flex-start;
 	justify-content: center;
 	border-radius: 60px 60px 0 0;
@@ -815,16 +816,19 @@ body[theme='blackhole'] #watch-page
 #watch-page .in-plyr .cast-panel > .tiles
 {
 	outline: none;
-	max-width: 980px;
+	max-width: 720px;
 	overflow-y: auto;
+	scrollbar-width: none;
 }
 
 #watch-page .in-plyr .cast-panel .cast
 {
+	width: 30%;
 	display: flex;
 	padding: 0 4px;
 	color: #d4d4d4;
 	margin: 16px 4px;
+	min-width: 160px;
 	padding-bottom: 4px;
 	align-items: center;
 	justify-content: center;
@@ -854,6 +858,12 @@ body[theme='blackhole'] #watch-page
 
 @media screen and (max-width: 442px)
 {
+	#watch-page .in-plyr .cast-panel .cast
+	{
+		width: 46%;
+		min-width: 100px;
+	}
+
 	#watch-page .in-plyr .cast-panel .cast img
 	{
 		width: 40px;
