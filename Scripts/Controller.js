@@ -1,24 +1,29 @@
 // #region Global Declarations
 
-NavState = 0;
-Settings = {};
-SecParam = '';
-PageIndex = -1;
-FirstLoad = true;
-IsLogged = false;
-VidHandler = null;
-PrevHisState = '';
-GlobTrigger = null;
-PreventLoop = false;
+var NavState = 0,
+PageIndex = -1,
+Settings = {},
+SecParam = '',
+FirstLoad = true,
+IsLogged = false,
+VidHandler = null,
+PrevHisState = '',
+GlobTrigger = null,
+PreventLoop = false,
 IsNavReffered = false;
 const StaticURI = location.origin.replace('://', '://static.') + '/';
+
 // #endregion Global Declarations
 
 // #region Startup
 
 $(document).ready(function()
 {
-	setTimeout(() => { $(window).trigger('popstate'); }, 50);
+	setTimeout(() =>
+	{
+		try { AlterTheme(localStorage.getItem('Theme'), false); } catch { };
+		$(window).trigger('popstate'); // Initialize
+	}, 50);
 	
 	$('.body-content').on("animationend", '.section', function()
 	{
@@ -411,9 +416,8 @@ function DisplayPopup(Title, Msg, Btn, Type, OnConf = null)
 function InformNETError(ErData)
 {
 	StopAnimation(); console.error('Error Occured', '\n', ErData);
-	if (ErData.name == "SecurityError") DisplayPopup('Permissions Denied', 'Either some permissions is missing or you are in Incognito mode. Please grant required permissions from your browser Settings or try leaving the In-Private mode.', 'Okay', 2);
-	else if (ErData.message.includes('fetch')) DisplayPopup("Network Issue", 'It looks like your internet connection is unstable, please make sure that your mobile data is turned ON or you are connected to a good Wi-Fi network & then try again',  "Okay", 1);
-	else DisplayPopup("Unknown Issue", 'Something went wrong while handling a task. Please ensure that your browser is updated to it\'s latest version. If the issue still persists then consider reporting the error or contact the owner for help.',  "Okay", 2);
+	if (ErData.name == "SecurityError") DisplayPopup('Permissions Denied', 'Either some permissions is missing or you are in Incognito mode. Please grant required permissions from your browser Settings or try leaving the Private mode.', 'Okay', 2);
+	else if (ErData.message.includes('fetch')) DisplayPopup("Network Issue", 'It looks like your internet connection is unstable, please make sure that your mobile data is turned ON or you are connected to a good Wi-Fi network & then try again',  "Okay", 1); else DisplayPopup("Unknown Issue", 'Something went wrong while handling a task. Please ensure that your browser is updated to it\'s latest version. If the issue still persists then consider reporting the error or contact the owner for help.',  "Okay", 2);
 }
 
 function ShowModal(MCode)
@@ -515,7 +519,7 @@ async function ManageRequest(Code)
 					{
 						Settings.Behaviour = USelBhv;
 						Settings.Theme = USelThm;
-						AlterTheme();
+						AlterTheme(USelThm);
 						
 						setTimeout(() =>
 						{
@@ -692,7 +696,7 @@ function InitHomePg(InitOBJ = null, ToVisit = true, NxtId = -1, EParam = null)
 			Settings = InitOBJ.Settings;
 			$('.settings .sec-bar.theme').attr('pos', Settings.Theme);
 			$('.settings .sec-bar.behaviour').attr('pos', Settings.Behaviour);
-			InitOBJ.Categories.forEach(CatElem => { BuildCatBox(CatElem); }); AlterTheme();
+			InitOBJ.Categories.forEach(CatElem => { BuildCatBox(CatElem); }); AlterTheme(Settings.Theme);
 		}
 		else
 		{
@@ -1022,17 +1026,6 @@ function IsOnPhone()
    catch(_NEP) { return false; }
 }
 
-function AlterTheme()
-{
-	if (!Settings.Theme) return;
-	switch (Settings.Theme)
-	{
-		case 1: $('body').attr('theme', 'killer'); break;
-		case 2: $('body').attr('theme', 'blackhole'); break;
-		case 3: $('body').attr('theme', 'natural'); break;
-	}
-}
-
 function MapMenuDelay()
 {
 	const ActiveMT = $('#stick-menu > span:not(.hidden)')
@@ -1070,6 +1063,19 @@ function DestroySession(Evt = null)
 		DisplayPopup("Session Expired", 'Your Authenticated session was expired probably due to another login from other browser. Kindly login again if you want to continue!', 'Okay', 1);
 		else DisplayPopup("Logged Out", 'You have been logged out successfully. Have a great day ahead!', "Okay", 0);
 	}, 1000);
+}
+
+function AlterTheme(ThemeCode, IsSave = true)
+{
+	if (!ThemeCode) return; else ThemeCode = parseInt(ThemeCode);
+	try { IsSave && localStorage.setItem('Theme', ThemeCode); } catch { }
+
+	switch (ThemeCode)
+	{
+		case 1: $('body').attr('theme', 'killer'); break;
+		case 2: $('body').attr('theme', 'blackhole'); break;
+		case 3: $('body').attr('theme', 'natural'); break;
+	}
 }
 
 Normalize = (Name = '') => DeSanitize(Name).replace(/ /g, '-');

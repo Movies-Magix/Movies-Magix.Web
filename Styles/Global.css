@@ -17,7 +17,7 @@ body
 	scroll-behavior: smooth;
 }
 
-html { height: -webkit-fill-available; }
+html { height: 100%; height: -webkit-fill-available; }
 #ghostery-tracker-tally { display: none; } /* Removing annoying ghostery bar */
 body[theme='killer'] { background: linear-gradient(to right, #160c20, #2a1425, #441818); }
 body[theme='natural'] { background: linear-gradient(to right, #0c201d, #1b3219, #34441b); }
