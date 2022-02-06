@@ -4,6 +4,7 @@ var NavState = 0,
 PageIndex = -1,
 Settings = {},
 SecParam = '',
+Authing = false,
 FirstLoad = true,
 IsLogged = false,
 VidHandler = null,
@@ -84,7 +85,7 @@ $(window).on("popstate", async function(PSE)
 	}
 	catch (NErrs)
 	{
-		InformNETError(NErrs);
+		InformError(NErrs);
 		return;
 	}
 
@@ -176,7 +177,7 @@ function Visit(PCode)
 					break;
 
 				case 2:
-					$('#list-page .movs')[0].scrollTo({ top: 0, behavior: 'smooth' });
+					setTimeout(() => $('#list-page .movs')[0].scrollTo({ top: 0, behavior: 'smooth' }), 500);
 					TextTitle = 'Movies in ' + SecParam + ' Category || ';
 					$('#list-page').css('display', 'flex');
 					$('#list-page').addClass('show');
@@ -196,9 +197,9 @@ function Visit(PCode)
 
 		MapMenuDelay();
 		PageIndex = PCode;
+		setTimeout(StopAnimation, 580);
 		$('#go-to-top').removeClass('active');
 		document.title = TextTitle + 'Movies-Magix';
-		setTimeout(() => { StopAnimation(); }, 580);
 	}, 320);
 }
 
@@ -290,7 +291,7 @@ async function LoadPg(PId, ResParam = '')
 			setTimeout(() => Visit(PId), VisitDelay);
 		}
 	}
-	catch(Er) { InformNETError(Er) }
+	catch(Er) { InformError(Er) }
 }
 
 // #endregion Navigations
@@ -358,9 +359,9 @@ async function FetchAndPopulate(LCateg)
 			for (let I = 0; I < TmpKey.length; I++)
 			{
 				const MvKey = TmpKey[I];
-				StrObj[MvKey]['HasHistory'] = true;
-				StrObj[MvKey]['Visit'] = XResp.Data[MvKey].Visit;
-				StrObj[MvKey]['Watched'] = XResp.Data[MvKey].Watched;
+				StrObj?.[MvKey]?.['HasHistory'] = true;
+				StrObj?.[MvKey]?.['Visit'] = XResp.Data[MvKey].Visit;
+				StrObj?.[MvKey]?.['Watched'] = XResp.Data[MvKey].Watched;
 			}
 
 			for (let J = 0; J < AllKeys.length; J++)
@@ -407,17 +408,21 @@ function DisplayPopup(Title, Msg, Btn, Type, OnConf = null)
 	$('div#popup-msg .msg-box p').html(Msg);
 	$('div#popup-msg .msg-box button').text(Btn);
 
-	setTimeout(function() {
+	setTimeout(function()
+	{
 		$('div#popup-msg').addClass('display');
 		$('div#popup-msg .msg-box button').focus();
 	}, 500);
 }
 
-function InformNETError(ErData)
+function InformError(ErData)
 {
-	StopAnimation(); console.error('Error Occured', '\n', ErData);
-	if (ErData.name == "SecurityError") DisplayPopup('Permissions Denied', 'Either some permissions is missing or you are in Incognito mode. Please grant required permissions from your browser Settings or try leaving the Private mode.', 'Okay', 2);
-	else if (ErData.message.includes('fetch')) DisplayPopup("Network Issue", 'It looks like your internet connection is unstable, please make sure that your mobile data is turned ON or you are connected to a good Wi-Fi network & then try again',  "Okay", 1); else DisplayPopup("Unknown Issue", 'Something went wrong while handling a task. Please ensure that your browser is updated to it\'s latest version. If the issue still persists then consider reporting the error or contact the owner for help.',  "Okay", 2);
+	setTimeout(() =>
+	{
+		StopAnimation(); console.error('Error Occured', '\n', ErData);
+		if (ErData.name == "SecurityError") DisplayPopup('Permissions Denied', 'Either some permissions is missing or you are in Incognito mode. Please grant required permissions from your browser Settings or try leaving the Private mode.', 'Okay', 2);
+		else if (ErData.message.includes('fetch')) DisplayPopup("Network Issue", 'It looks like your internet connection is unstable, please make sure that your mobile data is turned ON or you are connected to a good Wi-Fi network & then try again',  "Okay", 1); else DisplayPopup("Unknown Issue", 'Something went wrong while handling a task. Please ensure that your browser is updated to it\'s latest version. If the issue still persists then consider reporting the error or contact the owner for further help.',  "Okay", 2);
+	}, 500);
 }
 
 function ShowModal(MCode)
@@ -478,6 +483,16 @@ function StopAnimation()
 // #endregion Preloader Triggers
 
 // #region UI Base Functions
+
+function BuildCatBox(CatName)
+{
+	let CatReadable = CatName.replace(/-/g, ' ');
+	var CatgBX = $('<div/>', { class: 'cat', onclick: 'LoadPg(2, \'' + CatName + '\');' }),
+	CtImg = $('<img/>', { alt: CatName + ' Poster Image', src: 'Images/' + CatName + '_Pic.jpg' }),
+	Frthr = $('<div/>', { class: 'further' }); var Frth1 = $('<b/>'), Frth2 = $('<b/>');
+	Frth1.text(CatReadable); Frth2.text('Click To Load Movies'); Frthr.append(Frth1, Frth2);
+	CatgBX.append(CtImg, Frthr); $('#index-page .wrapper').append(CatgBX);
+}
 
 async function ManageRequest(Code)
 {
@@ -542,7 +557,7 @@ async function ManageRequest(Code)
 					return;
 				}
 
-				if (!EDescp || !EDescp.length < 10 || EDescp.length > 1024)
+				if (!EDescp || EDescp.length < 10 || EDescp.length > 1024)
 				{
 					DisplayPopup('Invalid Description Provided', 'Please describe how and when the error occured in brief but please stay in the range of 10 to 1024 characters while writing the description.', 'Okay', 1);
 					return;
@@ -601,22 +616,12 @@ async function ManageRequest(Code)
 				break;
 		}
 	}
-	catch (E) { InformNETError(E); }
+	catch (E) { InformError(E); }
 }
 
-function BuildCatBox(CatName)
+async function HandleSubmission(IsLogin, Evt)
 {
-	let CatReadable = CatName.replace(/-/g, ' ');
-	var CatgBX = $('<div/>', { class: 'cat', onclick: 'LoadPg(2, \'' + CatName + '\');' }),
-	CtImg = $('<img/>', { alt: CatName + ' Poster Image', src: 'Images/' + CatName + '_Pic.jpg' }),
-	Frthr = $('<div/>', { class: 'further' }); var Frth1 = $('<b/>'), Frth2 = $('<b/>');
-	Frth1.text(CatReadable); Frth2.text('Click To Load Movies'); Frthr.append(Frth1, Frth2);
-	CatgBX.append(CtImg, Frthr); $('#index-page .wrapper').append(CatgBX);
-}
-
-function HandleSubmission(IsLogin, Evt)
-{
-	Evt.preventDefault(); let Postable = { };
+	Evt.preventDefault(); if (Authing) return; let Postable = { };
 	const UEm = $(IsLogin ? '#l-email' : '#r-email').val(), UNm = $('#r-name').val(), Acc = $('#r-access').val(), UCfPwd = $('#r-cf-pwd').val(), UPwd = $(IsLogin ? '#l-pwd' : '#r-pwd').val(), RegExEmail = new RegExp(/^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/), RegExPass = new RegExp(/^(?=.*\d)(?=.*[a-zA-Z]).{8,64}$/);
 
 	if (!RegExEmail.test(UEm))
@@ -631,7 +636,7 @@ function HandleSubmission(IsLogin, Evt)
 		return;
 	}
 	
-	if (IsLogin) Postable = { Email: UEm, Pass: UPwd };
+	if (IsLogin) Postable = Object.freeze({ Email: UEm, Pass: UPwd });
 	else
 	{
 		if (UNm.length > 20 || UNm.length < 4)
@@ -646,7 +651,7 @@ function HandleSubmission(IsLogin, Evt)
 			return;
 		}
 
-		Postable = { Name: UNm, Email: UEm, Pass: UPwd, Access: Acc };
+		Postable = Object.freeze({ Name: UNm, Email: UEm, Pass: UPwd, Access: Acc });
 	}
 
 	const Canceller = new AbortController(),
@@ -657,11 +662,21 @@ function HandleSubmission(IsLogin, Evt)
 		headers: { "content-type": "application/json" }
 	};
 
-	setTimeout(() => { Canceller.abort(); }, 5000);
-	StartAnimation(IsLogin ? 'Verifying' : 'Creating');
-	fetch('/auth/' + (IsLogin ? 'Login' : 'Register'), ReqInit)
-		.then(async function(AuthRes) { GoodResponse(AuthRes).then(XRsp => {
-			if (XRsp) { InitHomePg(XRsp); $('#auth-page form input').val(''); } } ); }).catch(InformNETError);
+	try
+	{
+		Authing = true;
+		setTimeout(Canceller.abort, 5000);
+		StartAnimation(IsLogin ? 'Verifying' : 'Creating');
+		const AuthResp = await fetch('/auth/' + (IsLogin ? 'Login' : 'Register'), ReqInit);
+		Authing = false;
+		
+		if (AuthOK = await GoodResponse(AuthResp))
+		{
+			InitHomePg(AuthOK);
+			$('#auth-page form input').val('');
+		}
+	}
+	catch (Exep) { Authing = false; InformError(Exep); }
 }
 
 function BuildMovBox(CurCatg, MovName, MovDetail)
@@ -706,13 +721,7 @@ function InitHomePg(InitOBJ = null, ToVisit = true, NxtId = -1, EParam = null)
 		}
 	}
 
-	if (ToVisit)
-		setTimeout(() =>
-		{
-			Visit(1);
-			setTimeout(() => {
-				StopAnimation(); }, 1000);
-		}, 100);
+	if (ToVisit) setTimeout(() => { Visit(1); setTimeout(StopAnimation, 1000); }, 100);
 	else { PreventLoop = true; LoadPg(NxtId, EParam); }
 }
 
@@ -834,7 +843,7 @@ class PlayerHandler
 								if (await GoodResponse(LogRsp))
 									SyncedTM = CurrTime;
 							}
-							catch (LEr) { InformNETError(LEr); }
+							catch (LEr) { InformError(LEr); }
 						}
 					}, 60000);
 				});
@@ -999,7 +1008,7 @@ async function DownloadMov()
 			'Hurrah! the requested movie is being downloaded, Enjoy!', 'Okay', 0) }, 2000);
 		}
 	}
-	catch (DEr) { InformNETError(DEr); }
+	catch (DEr) { InformError(DEr); }
 }
 
 // #endregion Plyr & Watch Functions
@@ -1011,13 +1020,6 @@ function CleanUP()
 	$('#pop-box').removeClass('display');
 	$('#stick-menu .home').addClass('hidden');
 	if (VidHandler) VidHandler.Dispose();
-}
-
-function LogMeOut()
-{
-	StartAnimation('Removing');
-	fetch('/auth/Session', { method: 'DELETE' })
-	.then(DestroySession).catch(InformNETError);
 }
 
 function IsOnPhone()
@@ -1032,6 +1034,18 @@ function MapMenuDelay()
 	.toArray().reverse(), ActiveMTLength = ActiveMT.length;
 	ActiveMT.forEach((Elem, Idx) => { $(Elem).css('--delay',
 	((ActiveMTLength - Idx) * 80) + 'ms'); });
+}
+
+async function LogMeOut()
+{
+	try
+	{
+		StartAnimation('Removing');
+		await fetch('/auth/Session',
+		{ method: 'DELETE' });
+		DestroySession({});
+	}
+	catch (LtEr) { InformError(LtEr); }
 }
 
 function DeSanitize(Title)
@@ -1059,9 +1073,7 @@ function DestroySession(Evt = null)
 	
 	setTimeout(() =>
 	{
-		StopAnimation(); if (!Evt)
-		DisplayPopup("Session Expired", 'Your Authenticated session was expired probably due to another login from other browser. Kindly login again if you want to continue!', 'Okay', 1);
-		else DisplayPopup("Logged Out", 'You have been logged out successfully. Have a great day ahead!', "Okay", 0);
+		StopAnimation(); if (!Evt) DisplayPopup("Session Expired", 'Your Authenticated session was expired probably due to another login from other browser. Kindly login again if you want to continue!', 'Okay', 1); else DisplayPopup("Logged Out", 'You have been logged out successfully. Have a great day ahead!', "Okay", 0);
 	}, 1000);
 }
 

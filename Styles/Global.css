@@ -273,7 +273,7 @@ body[theme='blackhole'] #stick-menu
 
 #stick-menu > span.hidden { display: none; }
 #stick-menu + #sm-on-off.hide { display: none; }
-#stick-menu + #sm-on-off:hover span { left: 12px; }
+#stick-menu + #sm-on-off:hover span { left: 10px; }
 #stick-menu.show + #sm-on-off { background: #351f05b4; }
 #stick-menu.show > span { transform: translateX(0%) rotate(0deg); }
 #stick-menu.show { visibility: visible; transition: visibility 0s 0s; }
