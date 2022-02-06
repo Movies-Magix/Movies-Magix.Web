@@ -359,9 +359,10 @@ async function FetchAndPopulate(LCateg)
 			for (let I = 0; I < TmpKey.length; I++)
 			{
 				const MvKey = TmpKey[I];
-				StrObj?.[MvKey]?.['HasHistory'] = true;
-				StrObj?.[MvKey]?.['Visit'] = XResp.Data[MvKey].Visit;
-				StrObj?.[MvKey]?.['Watched'] = XResp.Data[MvKey].Watched;
+				if (!StrObj[MvKey]) continue;
+				StrObj[MvKey]['HasHistory'] = true;
+				StrObj[MvKey]['Visit'] = XResp.Data[MvKey].Visit;
+				StrObj[MvKey]['Watched'] = XResp.Data[MvKey].Watched;
 			}
 
 			for (let J = 0; J < AllKeys.length; J++)
