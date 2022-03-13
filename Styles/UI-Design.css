@@ -2,9 +2,14 @@
 
 #auth-page.show
 {
+	height: 100%;
 	display: grid;
+	overflow: auto;
+	scrollbar-width: none;
 	grid-template-columns: 1fr;
 }
+
+#auth-page::-webkit-scrollbar { display: none; }
 
 body[theme='killer'] #auth-page
 {
@@ -172,6 +177,8 @@ button.dsg[type='submit']
 /* #endregion Auth-Page Style */
 
 /* #region Index-Page Style */
+
+#index-page { height: 102%; }
 
 body[theme='killer'] #index-page
 {

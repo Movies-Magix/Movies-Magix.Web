@@ -12,7 +12,6 @@ PrevHisState = '',
 GlobTrigger = null,
 PreventLoop = false,
 IsNavReffered = false;
-const StaticURI = location.origin.replace('://', '://static.') + '/';
 
 // #endregion Global Declarations
 
@@ -78,10 +77,13 @@ $(window).on("popstate", async function(PSE)
 {
 	try
 	{
-		const FthStatus = await fetch('/auth/Status');
-		InitData = await FthStatus.json();
-		IsLogged = InitData.IsIn
-		&& !InitData.Blocked;
+		if (!IsLogged)
+		{
+			const FthStatus = await fetch('/auth/Status');
+			InitData = await FthStatus.json();
+			IsLogged = InitData.IsIn
+			&& !InitData.Blocked;
+		}
 	}
 	catch (NErrs)
 	{
@@ -666,8 +668,8 @@ async function HandleSubmission(IsLogin, Evt)
 	try
 	{
 		Authing = true;
-		setTimeout(Canceller.abort, 5000);
 		StartAnimation(IsLogin ? 'Verifying' : 'Creating');
+		setTimeout(() => Authing && Canceller.abort(), 5000);
 		const AuthResp = await fetch('/auth/' + (IsLogin ? 'Login' : 'Register'), ReqInit);
 		Authing = false;
 		
@@ -684,9 +686,9 @@ function BuildMovBox(CurCatg, MovName, MovDetail)
 {
 	var ResPath = CurCatg + '/' + MovName;
 	let MCard = $('<div/>', { class: 'movie-card', onclick: 'LoadPg(3, \'' + ResPath + '\')' });
-	var TLImg = $('<img/>', { src: StaticURI + CurCatg.toLowerCase() + '-mmx/' +
-	Normalize(MovName) + '.jpg', alt: 'Movie Poster' }), TLTitle = $('<span/>'),
-	TLMInf = $('<div/>', { class: 'mv-info' });
+	var TLImg = $('<img/>', { src: BuildUri(`${Normalize(MovName)}.jpg`, MovDetail.At,
+	`${CurCatg}-${MovDetail.In}`), alt: `${MovName} Poster` }), TLTitle
+		= $('<span/>'),	TLMInf = $('<div/>', { class: 'mv-info' });
 	
 	var SLLang = $('<b/>', { class: 'lang' }),
 	SLRate = $('<b/>', { class: 'age-rate' });
@@ -740,29 +742,58 @@ class PlayerHandler
 {
 	constructor()
 	{
-		var Exec = false, Tmr = 0, TOutMM = 0, CastPnlActive = false,
-		MmxPlayer = null, PInit = 0, IsPsdBefore = true,
-		SyncedTM = 0;
+		var Exec = false, Tmr = 0, TOutMM = 0, CastPnlActive = false, PIval = 0,
+		MmxPlayer = null, PInit = 0, IsPsdBefore = true, InPos = '',
+		SyncedTM = 0, HlsMgr = null, MovRes = [], HlsErr = false;
+
+		var SetPinger = function()
+		{
+			if (PIval) clearInterval(parseInt(PIval));
+			PIval = setInterval(async () =>
+			{
+				try
+				{
+					await fetch('/Ping?' + Date.now()); clearInterval(PIval);
+					if (HlsErr && HlsMgr) HlsMgr.startLoad();
+				}
+				catch { }
+			}, 2000);
+		}
 
 		this.InitElements = function(Catg, MNam, MObj)
 		{
-			let PWch = $('#watch-page .wrapper'), BaseUri = '/media/' + Catg + '/' + MNam;
+			window.ononline = async () =>
+			{
+				if (HlsErr)
+				{
+					try
+					{
+						await fetch('/Ping?' + Date.now()); HlsErr = false;
+						if (HlsMgr) HlsMgr.startLoad();
+					}
+					catch { SetPinger(); }
+				}
+			}
+			
+			let PWch = $('#watch-page .wrapper'); SecParam = Catg + '/' + MNam;
 			PWch.find('h2.mov-title').text(DeSanitize(MNam));
 			PWch.find('.video-container').empty();
-			SecParam = Catg + '/' + MNam;
+			Catg = Catg.toLowerCase();
 			
 			const VidCtrl = $('<video/>',
 			{
 				controls: '',
 				class: 'player',
-				preload: 'none',
 				playsinline: '',
 			});
 
-			VidCtrl.attr('data-poster', StaticURI + Catg
-			.toLowerCase() + '-mmx/' + Normalize(MNam) + '.jpg');
+			let ResTarget = Normalize(MNam);
+			MovRes.push(ResTarget);
+			MovRes.push(MObj.At);
+			InPos = `${Catg}-${MObj.In}`;
+			VidCtrl.attr('data-poster', BuildUri(
+				`${ResTarget}.jpg`, MObj.At, InPos));
 			if (Settings.Behaviour != 1) VidCtrl.attr('preload', 'metadata');
-			VidCtrl.append($('<source/>', { src: BaseUri + '.mp4', type: 'video/mp4' }));
 			PWch.find('.video-container').append(VidCtrl);
 
 			var MSz = MObj.Size / 1048576, MSzU = 'MB';
@@ -781,11 +812,11 @@ class PlayerHandler
 			PInit = setInterval(() =>
 			{
 				if (typeof Plyr == 'undefined') return; else clearInterval(PInit);
-				MmxPlayer = new Plyr('#watch-page video.player',
+				MmxPlayer = new Plyr(VidCtrl[0],
 				{
-					blankVideo: StaticURI + 'assets-mmx/Blank.mp4',
+					blankVideo: BuildUri('Blank.mp4', 'omega', 'assets'),
+					iconUrl: BuildUri('Plyr.svg', 'omega', 'assets'),
 					keyboard: { focused: false, global: false },
-					iconUrl: StaticURI + 'assets-mmx/Plyr.svg',
 					storage: { enabled: true, key: "Plyr" },
 					listeners:
 					{
@@ -811,7 +842,38 @@ class PlayerHandler
 					}
 				});
 
-				MmxPlayer.once('loadedmetadata', function()
+				MmxPlayer.once('ready', () =>
+				{
+					if (Hls.isSupported())
+					{
+						var HlsConf =
+						{
+							xhrSetup: (HlsXhr, HUrl) =>
+							{
+								if (HUrl.indexOf('.ts') > -1)
+									HlsXhr.open('GET', BuildUri(MovRes[0]
+										+ '.ts',	MovRes[1], InPos), true);
+							}
+						};
+						
+						if (HlsMgr) HlsMgr.destroy(); else HlsMgr = new Hls(HlsConf);
+						HlsMgr.loadSource(BuildUri(ResTarget + '.m3u8', MObj.At, InPos));
+						HlsMgr.attachMedia(VidCtrl[0]); // This will automatically the blob: src to element
+		
+						HlsMgr.on(Hls.Events.ERROR, (_Nm, Evt) =>
+						{
+							if (Evt.type = 'networkError')
+							{
+								HlsErr = true;
+								HlsMgr.stopLoad();
+								if (navigator.onLine) SetPinger();
+							}
+						});
+					}
+					else VidCtrl.attr('src', BuildUri(ResTarget + '.mp4', MObj.At, `${Catg}-${MObj.In}`));
+				});
+
+				MmxPlayer.once('loadedmetadata', () =>
 				{
 					if (MObj.HasHistory)
 					{
@@ -833,12 +895,11 @@ class PlayerHandler
 						{
 							try
 							{
-								let LHash = location.hash.split('/'),
-								LogRsp = await fetch('/media/Log',
+								let LogRsp = await fetch('/media/Log',
 								{
 									method: 'POST',
 									headers: { 'content-type': 'application/json' },
-									body: '{"Name": "' + LHash[LHash.length - 1] + '", "Time": ' + CurrTime + '}'
+									body: '{"Resource": "' + SecParam + '", "Time": ' + CurrTime + '}'
 								});
 								
 								if (await GoodResponse(LogRsp))
@@ -846,18 +907,17 @@ class PlayerHandler
 							}
 							catch (LEr) { InformError(LEr); }
 						}
-					}, 60000);
+					}, 30000);
 				});
 
 				MmxPlayer.on('error', console.log);
 				$('#watch-page .plyr__video-wrapper').append(
 					$('#watch-page .in-plyr').remove());
 				
-				 + '/casts-mmx/';
 				MObj.Casts.forEach((CastNM) =>
 				{
-					let CstImg = $('<img/>', { style: "background-image: url('" + StaticURI +
-					'casts-mmx/' + Normalize(CastNM) + ".jpg'), url('Images/Img-404.jpg');" }), CstB = $('<b/>'),
+					let CstImg = $('<img/>', { style: `background-image: url('${BuildUri(Normalize(CastNM)
+						+ '.jpg', 'omega', 'casts')}'), url('Images/Img-404.jpg');` }), CstB = $('<b/>'),
 					CstTile = $('<div/>', { class: 'cast' }); CstB.text(CastNM); CstTile.append(CstImg, CstB);
 					PWch.find('.in-plyr .cast-panel .tiles').append(CstTile);
 				});
@@ -950,6 +1010,17 @@ class PlayerHandler
 			}
 		};
 
+		this.ReqDownload = function()
+		{
+			$('iframe').attr('src', BuildUri(MovRes[0]
+				+ '.mp4', MovRes[1], InPos));
+
+			setTimeout(() =>
+			{
+				DisplayPopup('Download Started', 'Hurrah! Your requested Movie is now being downloaded. Please don\'t close the browser window to ensure un-interrupted download. ENJOY', 'Okay', 0);
+			}, 3000);
+		}
+
 		this.OnKeyDown = function(Action)
 		{
 			if (MmxPlayer)
@@ -972,8 +1043,10 @@ class PlayerHandler
 
 		this.Dispose = function()
 		{
-			$('#watch-page .in-plyr .cast-panel')
-			.removeClass('show');
+			window.ononline = null;
+			if (HlsMgr) HlsMgr.destroy();
+			$('#watch-page .in-plyr .cast-panel').removeClass('show');
+
 			setTimeout(() =>
 			{
 				$('#watch-page .wrapper').append($('#watch-page .in-plyr').remove());
@@ -981,36 +1054,14 @@ class PlayerHandler
 				$('#watch-page .in-plyr').off('mousemove click');
 				$('#watch-page .in-plyr').off('dblclick click');
 				$('#watch-page .in-plyr').css('z-index', '4');
-				clearInterval(Tmr);
-
-				if (MmxPlayer) MmxPlayer.destroy(function ()
-					{
-						MmxPlayer.pause(); MmxPlayer = null;
-						$('#watch-page video source').remove();
-						$('#watch-page video.player').get(0).load();
-					});
-				VidHandler = null;
-			}, 300);
+				if (MmxPlayer) MmxPlayer.destroy();
+				clearInterval(Tmr); VidHandler = null;
+			}, 1000);
 		};
 	}
 };
 
-async function DownloadMov()
-{
-	try
-	{
-		const DldFth = await fetch('/media/' + SecParam +
-		'.mp4', { headers: { 'X-MType':'Download' } });
-		
-		if (XResp = await GoodResponse(DldFth))
-		{
-			$('iframe').attr('src', XResp.URL);
-			setTimeout(() => { DisplayPopup('Download Started',
-			'Hurrah! the requested movie is being downloaded, Enjoy!', 'Okay', 0) }, 2000);
-		}
-	}
-	catch (DEr) { InformError(DEr); }
-}
+function DownloadMov() { VidHandler?.ReqDownload(); }
 
 // #endregion Plyr & Watch Functions
 
@@ -1091,6 +1142,7 @@ function AlterTheme(ThemeCode, IsSave = true)
 	}
 }
 
-Normalize = (Name = '') => DeSanitize(Name).replace(/ /g, '-');
+var Normalize = (Name = '') => DeSanitize(Name).replace(/ /g, '-');
+var BuildUri = (Res, At, In) => location.origin.replace('://', `://s3-${At}.`) + `/${encodeURIComponent(Res)}?${In.toLowerCase()}`;
 
 // #endregion Utilities
