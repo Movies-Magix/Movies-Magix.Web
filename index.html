@@ -5,7 +5,7 @@
 	<link rel="shortcut icon" href="Icon.png">
 	<link rel="stylesheet" href="Styles/Global.css">
 	<script defer src="Scripts/Zepto-Min.js"></script>
-	<script defer src="Scripts/HLS-Lib.js"></script>
+	<script defer src="Scripts/HLS-Stream.js"></script>
 	<script defer src="Scripts/Controller.js"></script>
 	<link rel="stylesheet" href="Styles/UI-Design.css">
 	<script defer src="Scripts/Plyr-Player.js"></script>
@@ -126,7 +126,7 @@
 	<div id="go-to-top"><img src="Images/Go-Up.png" alt="Back To Top"/></div>
 	<div id="stick-menu">
 		<span style="--delay:80ms" class="home hidden" onclick="LoadPg(1, null);">Goto Homepage</span>
-		<span style="--delay:160ms" class="watch hidden" onclick="DownloadMov();">Download Movie</span>
+		<span style="--delay:160ms" class="watch hidden" onclick="VidHandler?.ReqDownload();">Download Movie</span>
 		<span style="--delay:240ms" onclick="ShowModal(1);">Report An Error</span>
 		<span style="--delay:320ms" onclick="ShowModal(2);">Request A Movie</span>
 		<span style="--delay:400ms" onclick="ShowModal(0);">User Settings</span>
@@ -198,12 +198,12 @@
 							</svg>
 						</span>
 					</div>
-					<div class="cast-menu" onclick="ToggleCastPanel(1);">Movie Casts</div>
+					<div class="cast-menu" onclick="VidHandler?.ToggleCastPanel(1);">Movie Casts</div>
 					<div class="cast-panel">
 						<div class="bar">
 							<b>Casts</b>
 							<b>Source : IMDB</b>
-							<svg width="20" height="20" viewBox="0 0 25 25" style="cursor: pointer;" onclick="ToggleCastPanel(0);"
+							<svg width="20" height="20" viewBox="0 0 25 25" style="cursor: pointer;" onclick="VidHandler?.ToggleCastPanel(0);"
 								stroke="#ff7c7c" stroke-width="4" stroke-linecap="round">
 								<line x2="25" y2="25"/><line x1="25" y2="25"/>
 							 </svg>

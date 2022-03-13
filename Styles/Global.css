@@ -145,7 +145,7 @@ header.sticky .subhead .author
 	transform: scaleX(1.25);
 }
 
-@media screen and (max-width: 450px)
+@media screen and (max-width: 500px)
 {
 	header .logo
 	{

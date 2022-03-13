@@ -732,49 +732,63 @@ function InitHomePg(InitOBJ = null, ToVisit = true, NxtId = -1, EParam = null)
 
 // #region Plyr & Watch Functions
 
-function ToggleCastPanel(ICode)
-{
-	if (VidHandler) VidHandler
-		.ToggleCastPanel(ICode);
-}
-
 class PlayerHandler
 {
 	constructor()
 	{
-		var Exec = false, Tmr = 0, TOutMM = 0, CastPnlActive = false, PIval = 0,
+		var Exec = false, Tmr = 0, TOutMM = 0, CastPnlActive = false, PIval = 0, LoggerPaused = false,
 		MmxPlayer = null, PInit = 0, IsPsdBefore = true, InPos = '',
 		SyncedTM = 0, HlsMgr = null, MovRes = [], HlsErr = false;
 
 		var SetPinger = function()
 		{
-			if (PIval) clearInterval(parseInt(PIval));
-			PIval = setInterval(async () =>
+			clearInterval(PIval);
+			PIval = setInterval(() =>
+				TryResolve(true), 4000);
+		}
+
+		var StartLogger = async function()
+		{
+			const CurrTime = MmxPlayer.currentTime;
+			if (CurrTime > 4 && CurrTime != SyncedTM)
 			{
 				try
 				{
-					await fetch('/Ping?' + Date.now()); clearInterval(PIval);
-					if (HlsErr && HlsMgr) HlsMgr.startLoad();
+					let LogRsp = await fetch('/media/Log',
+					{
+						method: 'POST',
+						headers: { 'content-type': 'application/json' },
+						body: '{"Resource": "' + SecParam + '", "Time": ' + CurrTime + '}'
+					});
+					
+					if (await GoodResponse(LogRsp))	SyncedTM = CurrTime;
 				}
-				catch { }
-			}, 2000);
+				catch (LEr)
+				{
+					InformError(LEr);
+					clearInterval(Tmr);
+					LoggerPaused = true;
+				}
+			}
+		}
+
+		var TryResolve = async function(Bypass)
+		{
+			try
+			{
+				await fetch('/Ping/?' + Date.now()); // Ping to server to know if we're Really online
+				if (LoggerPaused) Tmr = setInterval(() => StartLogger(), 30000);
+				if (HlsMgr) HlsMgr.startLoad();
+				clearInterval(PIval);
+				LoggerPaused = false;
+				HlsErr = false;
+			}
+			catch { if (!Bypass) SetPinger(); }
 		}
 
 		this.InitElements = function(Catg, MNam, MObj)
 		{
-			window.ononline = async () =>
-			{
-				if (HlsErr)
-				{
-					try
-					{
-						await fetch('/Ping?' + Date.now()); HlsErr = false;
-						if (HlsMgr) HlsMgr.startLoad();
-					}
-					catch { SetPinger(); }
-				}
-			}
-			
+			window.ononline = async () => { (HlsErr || LoggerPaused) && TryResolve(false); }			
 			let PWch = $('#watch-page .wrapper'); SecParam = Catg + '/' + MNam;
 			PWch.find('h2.mov-title').text(DeSanitize(MNam));
 			PWch.find('.video-container').empty();
@@ -862,7 +876,7 @@ class PlayerHandler
 		
 						HlsMgr.on(Hls.Events.ERROR, (_Nm, Evt) =>
 						{
-							if (Evt.type = 'networkError')
+							if (Evt.type == 'networkError' && Evt.details.startsWith('frag'))
 							{
 								HlsErr = true;
 								HlsMgr.stopLoad();
@@ -888,26 +902,7 @@ class PlayerHandler
 						setTimeout(() => { MmxPlayer.muted = false; }, 100);
 					}
 
-					Tmr = setInterval(async () =>
-					{
-						const CurrTime = MmxPlayer.currentTime;
-						if (CurrTime > 4 && CurrTime != SyncedTM)
-						{
-							try
-							{
-								let LogRsp = await fetch('/media/Log',
-								{
-									method: 'POST',
-									headers: { 'content-type': 'application/json' },
-									body: '{"Resource": "' + SecParam + '", "Time": ' + CurrTime + '}'
-								});
-								
-								if (await GoodResponse(LogRsp))
-									SyncedTM = CurrTime;
-							}
-							catch (LEr) { InformError(LEr); }
-						}
-					}, 30000);
+					Tmr = setInterval(() => StartLogger(), 30000);
 				});
 
 				MmxPlayer.on('error', console.log);
@@ -1056,12 +1051,10 @@ class PlayerHandler
 				$('#watch-page .in-plyr').css('z-index', '4');
 				if (MmxPlayer) MmxPlayer.destroy();
 				clearInterval(Tmr); VidHandler = null;
-			}, 1000);
+			}, 1400);
 		};
 	}
 };
-
-function DownloadMov() { VidHandler?.ReqDownload(); }
 
 // #endregion Plyr & Watch Functions
 

@@ -4,13 +4,12 @@
 	X-Frame-Options: DENY
 	Referrer-Policy: no-referrer
 	X-Content-Type-Options: nosniff
-	Cache-Control: max-age=3600; must-revalidate
 	Strict-Transport-Security: max-age=31536000; includeSubDomains
 
-/Icon.png
-	Cache-Control: max-age=31536000; must-revalidate
-
 /Images/*
+	Cache-Control: max-age=2592000; must-revalidate
+
+/Icon.png
 	Cache-Control: max-age=31536000; must-revalidate
 
 /Scripts/Plyr-Player.js
