@@ -4,14 +4,68 @@
 	<meta charset='UTF-8'>
 	<link rel="shortcut icon" href="Icon.png">
 	<link rel="stylesheet" href="Styles/Global.css">
-	<script defer src="Scripts/Zepto-Min.js"></script>
-	<script defer src="Scripts/HLS-Stream.js"></script>
-	<script defer src="Scripts/Controller.js"></script>
 	<link rel="stylesheet" href="Styles/UI-Design.css">
-	<script defer src="Scripts/Plyr-Player.js"></script>
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<title>Unlimited Free & Fastest Movies Streaming || Movies-Magix</title>
 	<link rel="stylesheet" href="Styles/Plyr-Player.css" media="print" onload="this.media='all'; this.onload = null;">
+	<script>
+		fetch('/auth/Status').then(async (XResp) => window.authS = await XResp.json());
+		const GetScript = ScpUrl => new Promise((Res, Rej) =>
+		{
+			const script = document.createElement('script');
+			script.src = ScpUrl; script.defer = true;
+			script.onerror = Rej;
+
+			script.onload = script.onreadystatechange = function()
+			{
+				if (this.readyState && this.readyState !== 'loaded' && this.readyState !== 'complete') return;
+				script.onload = script.onreadystatechange = null;
+				Res();
+			}
+
+			document.head.appendChild(script);
+		});
+
+		DetectBrowser = () =>
+		{
+			const UA = navigator.userAgent;
+			let BNm = "", BVer = 0, BCat = 0;
+			const GetVer = Rexp => UA.match(Rexp) ? UA.match(Rexp)[2] : 0;
+
+			BNm = (/edg/i).test(UA) ? 'Edge' : BNm;
+			BNm = (/chromium/i).test(UA) ? 'Chromium' : BNm;
+			BNm = (/ucbrowser/i).test(UA) ? 'UCBrowser' : BNm;
+			BNm = (/firefox|fxios/i).test(UA) && !(/seamonkey/i).test(UA) ? 'Firefox' : BNm;
+			BNm = (/; msie|trident/i).test(UA) && !(/ucbrowser/i).test(UA) ? 'MS-IE' : BNm;
+			BNm = (/chrome|crios/i).test(UA) && !(/opr|opera|chromium|edg|ucbrowser|googlebot/i).test(UA) ? 'Chrome' : BNm;
+			BNm = (/safari/i).test(UA) && !(/chromium|edg|ucbrowser|chrome|crios|opr|opera|fxios|firefox/i).test(UA) ? 'Safari' : BNm; BNm = (/opr|opera/i).test(UA) ? 'Opera' : BNm;
+
+			switch (BNm)
+			{
+				case 'Chromium': BVer = GetVer(/(chromium)\/([\d\.]+)/i); break;
+				case 'Chrome': BVer = GetVer(/(chrome|crios)\/([\d\.]+)/i); break;
+				case 'UCBrowser': BVer = GetVer( /(ucbrowser)\/([\d\.]+)/i); break;
+				case 'Firefox': BVer = GetVer(/(firefox|fxios)\/([\d\.]+)/i); break;
+				case 'Safari': BVer = GetVer(/(safari)\/([\d\.]+)/i); BCat = 1; break;
+				case 'Edge': BVer = GetVer(/(edge|edga|edgios|edg)\/([\d\.]+)/i); break;
+				case 'Opera': BVer = GetVer(/(opera|opr)\/([\d\.]+)/i); BCat = 2; break;
+				case 'MS-IE': BVer = GetVer(/(trident)\/([\d\.]+)/i); BVer = BVer ? parseInt(BVer) + 4 : 7; break;
+			}
+
+			return [BNm, parseInt(BVer), BCat];
+		}
+
+		async function StartInit()
+		{
+			let BInfo = DetectBrowser();
+			const IsMob = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+
+			if (BInfo[0] == "MS-IE" || (BInfo[1] && ((BInfo[2] == 0 && BInfo[1] < 80) /* <= FF & Edge & Chrome */ || (BInfo[2] == 1 && BInfo[1] < 10) /* <= Safari */ || (BInfo[2] = 2 && ((IsMob && BInfo[1] < 50) || (!IsMob && BInfo[1] < 70))) /* <= Opera */ ))) window.onload = () => document.body.innerHTML = `<div id="not-supported">Oops! your browser is outdated!<hr><br>Please <a href="https://browser-update.org/en/update-browser.html">UPDATE</a> your '${BInfo[0]}' browser to continue or Use the latest version of Chrome, Edge Or Firefox to get the best experience on our Website.</div>`;
+			else Promise.all([GetScript('Scripts/Zepto-Min.js'), GetScript('Scripts/Controller.js')]).catch(() => alert('ERROR!! Some important modules were failed to load properly, kindly refresh the page to resolve this error.'));
+		}
+
+		StartInit();
+	</script>
 </head>
 <body theme='killer'>
 	<div class="anim-bg">

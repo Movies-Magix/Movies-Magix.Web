@@ -17,121 +17,127 @@ IsNavReffered = false;
 
 // #region Startup
 
-$(document).ready(function()
-{
-	setTimeout(() =>
-	{
-		try { AlterTheme(localStorage.getItem('Theme'), false); } catch { };
-		$(window).trigger('popstate'); // Initialize
-	}, 50);
-	
-	$('.body-content').on("animationend", '.section', function()
-	{
-		if ($(this).hasClass('show')) return;
-		else $(this).css('display', 'none');
-	});
+const WaitForZepto = () => new Promise(Rsolv =>
+	setInterval(() => (typeof Zepto != 'undefined') && Rsolv(), 5)),
+WaitForAuth = () => new Promise(Rsolv => setInterval(() => (typeof window.authS != 'undefined') && Rsolv(), 5));
 
-	$('#auth-page').on("transitionend", '.register-frm', function()
+WaitForZepto().then(() =>
+{ 
+	$(document).ready(function()
 	{
-		if ($('#auth-page').hasClass('login'))
-			$(this).css('display', 'none');
-	});
-	
-	($(window).add('#list-page .movs')).on("scroll", function()
-	{
-		const MaxSH = Math.max(window.scrollY, $('#list-page .movs')[0].scrollTop);
-		$('header').toggleClass('sticky', window.scrollY > 50);
-		$('#go-to-top').toggleClass('active', MaxSH > 50);
-	});
-
-	$('#go-to-top').on('click', function()
-	{
-		window.scrollTo({ top: 0, behavior: 'smooth' });
-		$('#list-page .movs')[0].scrollTo({ top: 0, behavior: 'smooth' });
-	});
-
-	$(window).on('keydown', function(KdE)
-	{
-		if (KdE.keyCode == 38 || KdE.keyCode == 40)
+		setTimeout(() =>
 		{
-			if (PageIndex == 2) $('#list-page .movs').focus();
-			else if (PageIndex == 3 && VidHandler) VidHandler.OnKeyDown('Focus');
-		}
-		else if (PageIndex == 3 && KdE.ctrlKey)
-		{
-			let Handled = false;
-			if (KdE.code == 'Space' || KdE.keyCode == 32) { Handled = true; VidHandler.OnKeyDown('Toggle'); }
-			else if (KdE.code == 'Period' || KdE.keyCode == 190) { Handled = true; VidHandler.OnKeyDown('Media-F'); }
-			else if (KdE.code == 'Comma' || KdE.keyCode == 188) { Handled = true; VidHandler.OnKeyDown('Media-R'); }
-			else if (KdE.code == 'Digit0' || KdE.keyCode == 48) { Handled = true; VidHandler.OnKeyDown('Volume-UP'); }
-			else if (KdE.code == 'Digit9' || KdE.keyCode == 57) { Handled = true; VidHandler.OnKeyDown('Volume-Down'); }
-			if (Handled) KdE.preventDefault();
-		}
-	});
-
-	$('.sec-bar').on('click', 'span', function (){ $(this).parent().attr('pos', $(this).index()); });
-	$('#stick-menu > span').on("click", function() { $('#stick-menu').removeClass('show'); });
-});
-
-$(window).on("popstate", async function(PSE)
-{
-	try
-	{
-		if (!IsLogged)
-		{
-			const FthStatus = await fetch('/auth/Status');
-			InitData = await FthStatus.json();
-			IsLogged = InitData.IsIn
-			&& !InitData.Blocked;
-		}
-	}
-	catch (NErrs)
-	{
-		InformError(NErrs);
-		return;
-	}
-
-	let Errored = false, SecID = -1,
-	LocHsh = location.hash, SecHsh = LocHsh.split('/');
-	if (!IsLogged) { Visit(0); FirstLoad = true; return; }
-	if (LocHsh.indexOf('/') < 0 || SecHsh.length == 1 || SecHsh[1] == "Home") SecID = 1;
-	else if (SecHsh[1] == "List")
-	{
-		if (SecHsh.length == 3)
-		{
-			SecParam = SecHsh[2];
-			SecID = 2;
-		}
-		else Errored = true;
-	}
-	else if (SecHsh[1] == "Watch")
-	{
-		if (SecHsh.length == 4)
-		{
-			SecParam = SecHsh[2] + '/' + SecHsh[3];
-			SecID = 3;
-		}
-		else Errored = true;
-	}
-	else Errored = true;
-
-	if (Errored)
-	{
-		DisplayPopup('Invalid Location', 'You are trying to visit a non-existing or invalid url. Please double check your entered address and then try again!', 'Okay', 1); SecID = 1;
+			try { AlterTheme(localStorage.getItem('Theme'), false); } catch { };
+			$(window).trigger('popstate'); // Initialize
+		}, 50);
 		
-		if (!FirstLoad)
+		$('.body-content').on("animationend", '.section', function()
 		{
-			history.back();
-			history.replaceState('', PrevHisState, '#/' + PrevHisState); return;
-		}
-	}
-	else PrevHisState = LocHsh.replace('#/', '');
-
-	if (SecID != PageIndex)
+			if ($(this).hasClass('show')) return;
+			else $(this).css('display', 'none');
+		});
+	
+		$('#auth-page').on("transitionend", '.register-frm', function()
+		{
+			if ($('#auth-page').hasClass('login'))
+				$(this).css('display', 'none');
+		});
+		
+		($(window).add('#list-page .movs')).on("scroll", function()
+		{
+			const MaxSH = Math.max(window.scrollY, $('#list-page .movs')[0].scrollTop);
+			$('header').toggleClass('sticky', window.scrollY > 50);
+			$('#go-to-top').toggleClass('active', MaxSH > 50);
+		});
+	
+		$('#go-to-top').on('click', function()
+		{
+			window.scrollTo({ top: 0, behavior: 'smooth' });
+			$('#list-page .movs')[0].scrollTo({ top: 0, behavior: 'smooth' });
+		});
+	
+		$(window).on('keydown', function(KdE)
+		{
+			if (KdE.keyCode == 38 || KdE.keyCode == 40)
+			{
+				if (PageIndex == 2) $('#list-page .movs').focus();
+				else if (PageIndex == 3 && VidHandler) VidHandler.OnKeyDown('Focus');
+			}
+			else if (PageIndex == 3 && KdE.ctrlKey)
+			{
+				let Handled = false;
+				if (KdE.code == 'Space' || KdE.keyCode == 32) { Handled = true; VidHandler.OnKeyDown('Toggle'); }
+				else if (KdE.code == 'Period' || KdE.keyCode == 190) { Handled = true; VidHandler.OnKeyDown('Media-F'); }
+				else if (KdE.code == 'Comma' || KdE.keyCode == 188) { Handled = true; VidHandler.OnKeyDown('Media-R'); }
+				else if (KdE.code == 'Digit0' || KdE.keyCode == 48) { Handled = true; VidHandler.OnKeyDown('Volume-UP'); }
+				else if (KdE.code == 'Digit9' || KdE.keyCode == 57) { Handled = true; VidHandler.OnKeyDown('Volume-Down'); }
+				if (Handled) KdE.preventDefault();
+			}
+		});
+	
+		$('.sec-bar').on('click', 'span', function (){ $(this).parent().attr('pos', $(this).index()); });
+		$('#stick-menu > span').on("click", function() { $('#stick-menu').removeClass('show'); });
+	});
+	
+	$(window).on("popstate", async function(PSE)
 	{
-		NavState = parseInt(PSE.state);
-		IsNavReffered = true; LoadPg(SecID, SecParam);
-	}
+		try
+		{
+			if (!IsLogged)
+			{
+				await WaitForAuth();
+				IsLogged = window.authS.IsIn
+				&& !window.authS.Blocked;
+			}
+		}
+		catch (NErrs)
+		{
+			InformError(NErrs);
+			return;
+		}
+	
+		let Errored = false, SecID = -1,
+		LocHsh = location.hash, SecHsh = LocHsh.split('/');
+		if (!IsLogged) { Visit(0); FirstLoad = true; return; }
+		if (LocHsh.indexOf('/') < 0 || SecHsh.length == 1 || SecHsh[1] == "Home") SecID = 1;
+		else if (SecHsh[1] == "List")
+		{
+			if (SecHsh.length == 3)
+			{
+				SecParam = SecHsh[2];
+				SecID = 2;
+			}
+			else Errored = true;
+		}
+		else if (SecHsh[1] == "Watch")
+		{
+			if (SecHsh.length == 4)
+			{
+				SecParam = SecHsh[2] + '/' + SecHsh[3];
+				SecID = 3;
+			}
+			else Errored = true;
+		}
+		else Errored = true;
+	
+		if (Errored)
+		{
+			DisplayPopup('Invalid Location', 'You are trying to visit a non-existing or invalid url. Please double check your entered address and then try again!', 'Okay', 1); SecID = 1;
+			
+			if (!FirstLoad)
+			{
+				history.back();
+				history.replaceState('', PrevHisState, '#/' + PrevHisState); return;
+			}
+		}
+		else PrevHisState = LocHsh.replace('#/', '');
+	
+		if (SecID != PageIndex)
+		{
+			NavState = parseInt(PSE.state);
+			IsNavReffered = true; LoadPg(SecID, SecParam);
+		}
+	});
 });
 
 // #endregion Startup
@@ -245,7 +251,7 @@ async function LoadPg(PId, ResParam = '')
 {
 	try
 	{
-		if (!PreventLoop && FirstLoad) InitHomePg(InitData, PId == 1, PId, ResParam);
+		if (!PreventLoop && FirstLoad) InitHomePg(window.authS, PId == 1, PId, ResParam);
 		else
 		{
 			let VisitDelay = 500;
@@ -737,7 +743,7 @@ class PlayerHandler
 	constructor()
 	{
 		var Exec = false, Tmr = 0, TOutMM = 0, CastPnlActive = false, PIval = 0, LoggerPaused = false,
-		MmxPlayer = null, PInit = 0, IsPsdBefore = true, InPos = '',
+		MmxPlayer = null, IsPsdBefore = true, InPos = '',
 		SyncedTM = 0, HlsMgr = null, MovRes = [], HlsErr = false;
 
 		var SetPinger = function()
@@ -786,8 +792,10 @@ class PlayerHandler
 			catch { if (!Bypass) SetPinger(); }
 		}
 
-		this.InitElements = function(Catg, MNam, MObj)
+		this.InitElements = async function(Catg, MNam, MObj)
 		{
+			if (typeof Hls == 'undefined' || typeof Plyr == 'undefined')
+				await Promise.all([GetScript('Scripts/Plyr-Player.js'), GetScript('Scripts/HLS-Stream.js')]);
 			window.ononline = async () => { (HlsErr || LoggerPaused) && TryResolve(false); }			
 			let PWch = $('#watch-page .wrapper'); SecParam = Catg + '/' + MNam;
 			PWch.find('h2.mov-title').text(DeSanitize(MNam));
@@ -823,100 +831,107 @@ class PlayerHandler
 			MvDetE.eq(3).html('<i>Released On:</i>&nbsp;' + MObj.Released);
 			MvDetE.eq(1).html('<i>Video Size:</i>&nbsp;' + MSz + ' ' + MSzU);
 
-			PInit = setInterval(() =>
+			if (typeof Hls == 'undefined' || typeof Plyr == 'undefined')
 			{
-				if (typeof Plyr == 'undefined') return; else clearInterval(PInit);
-				MmxPlayer = new Plyr(VidCtrl[0],
+				setTimeout(() =>
 				{
-					blankVideo: BuildUri('Blank.mp4', 'omega', 'assets'),
-					iconUrl: BuildUri('Plyr.svg', 'omega', 'assets'),
-					keyboard: { focused: false, global: false },
-					storage: { enabled: true, key: "Plyr" },
-					listeners:
-					{
-						fullscreen: function ()
-						{
-							if (MmxPlayer.fullscreen.active)
-							{
-								if (IsOnPhone()) screen.orientation.unlock();
-								setTimeout(() => { MmxPlayer.fullscreen.exit(); }, 1000);
-							}
-							else
-							{
-								MmxPlayer.fullscreen.enter();
-								if (IsOnPhone()) setTimeout(() =>
-									{
-										screen.orientation.lock("landscape")
-										.catch(function (_E) { console.warn("Landscape mode is not available!!"); });
-									}, 1000);
-							}
+					StopAnimation();
+					DisplayPopup('Load Error', 'Oops! We\'re having some trouble loading your Requested resource at this moment, please try again or refresh the page if issue persists.',  'Okay', 2);
+				}, 500);
 
-							return false;
+				return;
+			}
+
+			MmxPlayer = new Plyr(VidCtrl[0],
+			{
+				blankVideo: BuildUri('Blank.mp4', 'omega', 'assets'),
+				iconUrl: BuildUri('Plyr.svg', 'omega', 'assets'),
+				keyboard: { focused: false, global: false },
+				storage: { enabled: true, key: "Plyr" },
+				listeners:
+				{
+					fullscreen: function ()
+					{
+						if (MmxPlayer.fullscreen.active)
+						{
+							if (IsOnPhone()) screen.orientation.unlock();
+							setTimeout(() => { MmxPlayer.fullscreen.exit(); }, 1000);
 						}
-					}
-				});
-
-				MmxPlayer.once('ready', () =>
-				{
-					if (Hls.isSupported())
-					{
-						var HlsConf =
+						else
 						{
-							xhrSetup: (HlsXhr, HUrl) =>
-							{
-								if (HUrl.indexOf('.ts') > -1)
-									HlsXhr.open('GET', BuildUri(MovRes[0]
-										+ '.ts',	MovRes[1], InPos), true);
-							}
-						};
-						
-						if (HlsMgr) HlsMgr.destroy(); else HlsMgr = new Hls(HlsConf);
-						HlsMgr.loadSource(BuildUri(ResTarget + '.m3u8', MObj.At, InPos));
-						HlsMgr.attachMedia(VidCtrl[0]); // This will automatically the blob: src to element
-		
-						HlsMgr.on(Hls.Events.ERROR, (_Nm, Evt) =>
+							MmxPlayer.fullscreen.enter();
+							if (IsOnPhone()) setTimeout(() =>
+								{
+									screen.orientation.lock("landscape")
+									.catch(function (_E) { console.warn("Landscape mode is not available!!"); });
+								}, 1000);
+						}
+
+						return false;
+					}
+				}
+			});
+
+			MmxPlayer.once('ready', () =>
+			{
+				if (Hls.isSupported())
+				{
+					var HlsConf =
+					{
+						xhrSetup: (HlsXhr, HUrl) =>
 						{
-							if (Evt.type == 'networkError' && Evt.details.startsWith('frag'))
-							{
-								HlsErr = true;
-								HlsMgr.stopLoad();
-								if (navigator.onLine) SetPinger();
-							}
-						});
-					}
-					else VidCtrl.attr('src', BuildUri(ResTarget + '.mp4', MObj.At, `${Catg}-${MObj.In}`));
-				});
-
-				MmxPlayer.once('loadedmetadata', () =>
-				{
-					if (MObj.HasHistory)
+							if (HUrl.indexOf('.ts') > -1)
+								HlsXhr.open('GET', BuildUri(MovRes[0]
+									+ '.ts',	MovRes[1], InPos), true);
+						}
+					};
+					
+					if (HlsMgr) HlsMgr.destroy(); else HlsMgr = new Hls(HlsConf);
+					HlsMgr.loadSource(BuildUri(ResTarget + '.m3u8', MObj.At, InPos));
+					HlsMgr.attachMedia(VidCtrl[0]); // This will automatically the blob: src to element
+	
+					HlsMgr.on(Hls.Events.ERROR, (_Nm, Evt) =>
 					{
-						MmxPlayer.currentTime =	MObj.Watched * MmxPlayer.duration;
-						SyncedTM = MmxPlayer.currentTime;
-					}
+						if (Evt.type == 'networkError' && Evt.details.startsWith('frag'))
+						{
+							HlsErr = true;
+							HlsMgr.stopLoad();
+							if (navigator.onLine) SetPinger();
+						}
+					});
+				}
+				else VidCtrl.attr('src', BuildUri(ResTarget + '.mp4', MObj.At, `${Catg}-${MObj.In}`));
+			});
 
-					if (Settings.Behaviour == 3)
-					{
-						MmxPlayer.muted = true;
-						MmxPlayer.play().catch(() => DisplayPopup('Autoplay Disabled', 'Your browser settings or preferences doesn\'t allow autoplay, Please allow this site in your settings or manually start the video.', 'Okay', 2));
-						setTimeout(() => { MmxPlayer.muted = false; }, 100);
-					}
-
-					Tmr = setInterval(() => StartLogger(), 30000);
-				});
-
-				MmxPlayer.on('error', console.log);
-				$('#watch-page .plyr__video-wrapper').append(
-					$('#watch-page .in-plyr').remove());
-				
-				MObj.Casts.forEach((CastNM) =>
+			MmxPlayer.once('loadedmetadata', () =>
+			{
+				if (MObj.HasHistory)
 				{
-					let CstImg = $('<img/>', { style: `background-image: url('${BuildUri(Normalize(CastNM)
-						+ '.jpg', 'omega', 'casts')}'), url('Images/Img-404.jpg');` }), CstB = $('<b/>'),
-					CstTile = $('<div/>', { class: 'cast' }); CstB.text(CastNM); CstTile.append(CstImg, CstB);
-					PWch.find('.in-plyr .cast-panel .tiles').append(CstTile);
-				});
-			}, 100);
+					MmxPlayer.currentTime =	MObj.Watched * MmxPlayer.duration;
+					SyncedTM = MmxPlayer.currentTime;
+				}
+
+				if (Settings.Behaviour == 3)
+				{
+					MmxPlayer.muted = true;
+					MmxPlayer.play().catch(() => DisplayPopup('Autoplay Disabled', 'Your browser settings or preferences doesn\'t allow autoplay, Please allow this site in your settings or manually start the video.', 'Okay', 2));
+					setTimeout(() => { MmxPlayer.muted = false; }, 100);
+				}
+
+				Tmr = setInterval(() => StartLogger(), 30000);
+			});
+
+			MmxPlayer.on('error', console.log);
+			$('#watch-page .plyr__video-wrapper').append(
+				$('#watch-page .in-plyr').remove());
+			
+			MObj.Casts.forEach((CastNM) =>
+			{
+				let CstImg = $('<img/>', { style: `background-image: url('${BuildUri(Normalize(CastNM)
+					+ '.jpg', 'omega', 'casts')}'), url('Images/Img-404.jpg');` }), CstB = $('<b/>'),
+				CstTile = $('<div/>', { class: 'cast' }); CstB.text(CastNM); CstTile.append(CstImg, CstB);
+				PWch.find('.in-plyr .cast-panel .tiles').append(CstTile);
+			});
 		};
 
 		this.InPlayerSetup = function()

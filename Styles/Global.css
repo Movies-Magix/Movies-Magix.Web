@@ -23,6 +23,32 @@ body[theme='killer'] { background: linear-gradient(to right, #160c20, #2a1425, #
 body[theme='natural'] { background: linear-gradient(to right, #0c201d, #1b3219, #34441b); }
 body[theme='blackhole'] { background: linear-gradient(to right, #000000, #191a19, #333333); }
 
+#un-supported
+{
+	top: 36%;
+	width: 90%;
+	font-size: 14px;
+	max-width: 420px;
+	color: #f3ba63;
+	padding: 5px 4px;
+	user-select: none;
+	align-self: center;
+	text-align: center;
+	position: relative;
+	border-radius: 25px;
+	display: inline-block;
+	font-family: monospace;
+	border-bottom: 2px solid;
+	filter: drop-shadow(2px 8px 6px black);
+}
+
+#un-supported a
+{
+	color: aqua;
+	font-weight: 700;
+	text-decoration: overline;
+}
+
 /* #endregion Basic Style */
 
 /* #region Header Style */
