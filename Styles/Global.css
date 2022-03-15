@@ -25,12 +25,12 @@ body[theme='blackhole'] { background: linear-gradient(to right, #000000, #191a19
 
 #un-supported
 {
-	top: 36%;
 	width: 90%;
 	font-size: 14px;
 	max-width: 420px;
 	color: #f3ba63;
 	padding: 5px 4px;
+	margin-top: 200px;
 	user-select: none;
 	align-self: center;
 	text-align: center;
@@ -41,6 +41,8 @@ body[theme='blackhole'] { background: linear-gradient(to right, #000000, #191a19
 	border-bottom: 2px solid;
 	filter: drop-shadow(2px 8px 6px black);
 }
+
+#pre-unsp #un-supported { margin-top: 0; }
 
 #un-supported a
 {

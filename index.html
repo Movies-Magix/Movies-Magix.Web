@@ -9,65 +9,30 @@
 	<title>Unlimited Free & Fastest Movies Streaming || Movies-Magix</title>
 	<link rel="stylesheet" href="Styles/Plyr-Player.css" media="print" onload="this.media='all'; this.onload = null;">
 	<script>
-		fetch('/auth/Status').then(async (XResp) => window.authS = await XResp.json());
-		const GetScript = ScpUrl => new Promise((Res, Rej) =>
-		{
-			const script = document.createElement('script');
-			script.src = ScpUrl; script.defer = true;
-			script.onerror = Rej;
+		function GetScript(e){return new Promise((function(r,t){const o=document.createElement("script");o.src=e,o.defer=!0,o.onerror=t,o.onload=o.onreadystatechange=function(){this.readyState&&"loaded"!==this.readyState&&"complete"!==this.readyState||(o.onload=o.onreadystatechange=null,r())},document.head.appendChild(o)}))}function DetectBrowser(){const e=navigator.userAgent;let r="",t=0,o=0;function i(r){return e.match(r)?e.match(r)[2]:0}switch(r=/edg/i.test(e)?"Edge":r,r=/chromium/i.test(e)?"Chromium":r,r=/ucbrowser/i.test(e)?"UCBrowser":r,r=/firefox|fxios/i.test(e)&&!/seamonkey/i.test(e)?"Firefox":r,r=/; msie|trident/i.test(e)&&!/ucbrowser/i.test(e)?"MS-IE":r,r=/chrome|crios/i.test(e)&&!/opr|opera|chromium|edg|ucbrowser|googlebot/i.test(e)?"Chrome":r,r=/safari/i.test(e)&&!/chromium|edg|ucbrowser|chrome|crios|opr|opera|fxios|firefox/i.test(e)?"Safari":r,r=/opr|opera/i.test(e)?"Opera":r,r){case"Chromium":t=i(/(chromium)\/([\d\.]+)/i);break;case"Chrome":t=i(/(chrome|crios)\/([\d\.]+)/i);break;case"UCBrowser":t=i(/(ucbrowser)\/([\d\.]+)/i);break;case"Firefox":t=i(/(firefox|fxios)\/([\d\.]+)/i);break;case"Safari":t=i(/(safari)\/([\d\.]+)/i),o=1;break;case"Edge":t=i(/(edge|edga|edgios|edg)\/([\d\.]+)/i);break;case"Opera":t=i(/(opera|opr)\/([\d\.]+)/i),o=2;break;case"MS-IE":t=i(/(trident)\/([\d\.]+)/i),t=t?parseInt(t)+4:7}return[r,parseInt(t),o]}
 
-			script.onload = script.onreadystatechange = function()
-			{
-				if (this.readyState && this.readyState !== 'loaded' && this.readyState !== 'complete') return;
-				script.onload = script.onreadystatechange = null;
-				Res();
-			}
-
-			document.head.appendChild(script);
-		});
-
-		DetectBrowser = () =>
-		{
-			const UA = navigator.userAgent;
-			let BNm = "", BVer = 0, BCat = 0;
-			const GetVer = Rexp => UA.match(Rexp) ? UA.match(Rexp)[2] : 0;
-
-			BNm = (/edg/i).test(UA) ? 'Edge' : BNm;
-			BNm = (/chromium/i).test(UA) ? 'Chromium' : BNm;
-			BNm = (/ucbrowser/i).test(UA) ? 'UCBrowser' : BNm;
-			BNm = (/firefox|fxios/i).test(UA) && !(/seamonkey/i).test(UA) ? 'Firefox' : BNm;
-			BNm = (/; msie|trident/i).test(UA) && !(/ucbrowser/i).test(UA) ? 'MS-IE' : BNm;
-			BNm = (/chrome|crios/i).test(UA) && !(/opr|opera|chromium|edg|ucbrowser|googlebot/i).test(UA) ? 'Chrome' : BNm;
-			BNm = (/safari/i).test(UA) && !(/chromium|edg|ucbrowser|chrome|crios|opr|opera|fxios|firefox/i).test(UA) ? 'Safari' : BNm; BNm = (/opr|opera/i).test(UA) ? 'Opera' : BNm;
-
-			switch (BNm)
-			{
-				case 'Chromium': BVer = GetVer(/(chromium)\/([\d\.]+)/i); break;
-				case 'Chrome': BVer = GetVer(/(chrome|crios)\/([\d\.]+)/i); break;
-				case 'UCBrowser': BVer = GetVer( /(ucbrowser)\/([\d\.]+)/i); break;
-				case 'Firefox': BVer = GetVer(/(firefox|fxios)\/([\d\.]+)/i); break;
-				case 'Safari': BVer = GetVer(/(safari)\/([\d\.]+)/i); BCat = 1; break;
-				case 'Edge': BVer = GetVer(/(edge|edga|edgios|edg)\/([\d\.]+)/i); break;
-				case 'Opera': BVer = GetVer(/(opera|opr)\/([\d\.]+)/i); BCat = 2; break;
-				case 'MS-IE': BVer = GetVer(/(trident)\/([\d\.]+)/i); BVer = BVer ? parseInt(BVer) + 4 : 7; break;
-			}
-
-			return [BNm, parseInt(BVer), BCat];
-		}
-
-		async function StartInit()
+		function StartInit()
 		{
 			let BInfo = DetectBrowser();
 			const IsMob = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-
-			if (BInfo[0] == "MS-IE" || (BInfo[1] && ((BInfo[2] == 0 && BInfo[1] < 80) /* <= FF & Edge & Chrome */ || (BInfo[2] == 1 && BInfo[1] < 10) /* <= Safari */ || (BInfo[2] = 2 && ((IsMob && BInfo[1] < 50) || (!IsMob && BInfo[1] < 70))) /* <= Opera */ ))) window.onload = () => document.body.innerHTML = `<div id="not-supported">Oops! your browser is outdated!<hr><br>Please <a href="https://browser-update.org/en/update-browser.html">UPDATE</a> your '${BInfo[0]}' browser to continue or Use the latest version of Chrome, Edge Or Firefox to get the best experience on our Website.</div>`;
-			else Promise.all([GetScript('Scripts/Zepto-Min.js'), GetScript('Scripts/Controller.js')]).catch(() => alert('ERROR!! Some important modules were failed to load properly, kindly refresh the page to resolve this error.'));
+			if (typeof fetch == 'undefined' || BInfo[0] == "MS-IE" || BInfo[0] == "UCBrowser" || (BInfo[1] && ((BInfo[2] == 0 && BInfo[1] < 80) /*<= FF, Edge & Chrome*/ || (BInfo[2] == 1 && BInfo[1] < 10) /*<= Safari*/ || (BInfo[2] = 2 && ((IsMob && BInfo[1] < 50) || (!IsMob && BInfo[1] < 70))) /*<= Opera*/ ))) { window.onload = function() { document.body.innerHTML = '<div id="un-supported">Oops! Your BROWSER is outdated<hr><br>Please <a href="https://browser-update.org/en/update-browser.html">UPDATE</a> your "' + BInfo[0] + '" browser to continue or Use the latest version of Chrome, Edge Or Firefox to get the best experience on our Website.</div>'; } }
+			else
+			{
+				fetch('/auth/Status').then(function(XResp) { XResp.json().then(function(AJson) { window.authS = AJson }); });
+				Promise.all([GetScript('Scripts/Zepto-Min.js'), GetScript('Scripts/Controller.js')]).catch(function() { alert('ERROR!! Some important modules were failed to load properly, kindly refresh the page to resolve this error.'); });
+			}
 		}
 
 		StartInit();
 	</script>
 </head>
 <body theme='killer'>
+	<noscript>
+        <div id="pre-unsp" style="position: fixed; display: flex; top: 0; left: 0; z-index: 10000; height: 100%;
+            width: 100%; align-items: center; justify-content: center; background: radial-gradient(circle, #8b005ff3, #8d1919f1);">
+            <div id="un-supported">Oops! Javascript is disabled<hr><br>Please <a href="https://www.whatismybrowser.com/guides/how-to-enable-javascript/">ENABLE JAVASCRIPT</a> from your browser settings to enjoy all features of this Website.</div>
+        </div>
+    </noscript>
 	<div class="anim-bg">
 		<div class="loop-holder">
 			<div class="loader"></div>
