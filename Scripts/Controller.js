@@ -288,7 +288,7 @@ async function LoadPg(PId, ResParam = '')
 						else
 						{
 							if (!VidHandler) VidHandler = new PlayerHandler();
-							VidHandler.InitElements(Wchs[0], Wchs[1], CatgCH[Wchs[1]]);
+							await VidHandler.InitElements(Wchs[0], Wchs[1], CatgCH[Wchs[1]]);
 							VidHandler.InPlayerSetup();
 						}
 					}
@@ -769,12 +769,7 @@ class PlayerHandler
 					
 					if (await GoodResponse(LogRsp))	SyncedTM = CurrTime;
 				}
-				catch (LEr)
-				{
-					InformError(LEr);
-					clearInterval(Tmr);
-					LoggerPaused = true;
-				}
+				catch { }
 			}
 		}
 
@@ -896,7 +891,10 @@ class PlayerHandler
 						{
 							HlsErr = true;
 							HlsMgr.stopLoad();
+							clearInterval(Tmr);
+							LoggerPaused = true;
 							if (navigator.onLine) SetPinger();
+							InformError({ name: "null", message: "fetch error" });
 						}
 					});
 				}
@@ -1022,13 +1020,16 @@ class PlayerHandler
 
 		this.ReqDownload = function()
 		{
-			$('iframe').attr('src', BuildUri(MovRes[0]
-				+ '.mp4', MovRes[1], InPos));
-
-			setTimeout(() =>
+			DisplayPopup("Please Note:", 'The file you are about to download is in <b>.ts</b> format which might not run natievely in your device. You may need the <a target="_blank" href="https://www.videolan.org/vlc/">VLC Media Player</a> application to play videos offline. Please click confirm to start downloading.', 'Confirm', 1, () =>
 			{
-				DisplayPopup('Download Started', 'Hurrah! Your requested Movie is now being downloaded. Please don\'t close the browser window to ensure un-interrupted download. ENJOY', 'Okay', 0);
-			}, 3000);
+				$('iframe').attr('src', BuildUri(MovRes[0]
+					+ '.ts', MovRes[1], InPos));
+
+				setTimeout(() =>
+				{
+					DisplayPopup('Download Started', 'Hurrah! Your requested Movie is now being downloaded. Please don\'t close the browser window to ensure un-interrupted download. And don\'t forget to install VLC Player if your video doesn\'t play. ENJOY!!', 'Okay', 0);
+				}, 3000);
+			});
 		}
 
 		this.OnKeyDown = function(Action)
@@ -1066,7 +1067,7 @@ class PlayerHandler
 				$('#watch-page .in-plyr').css('z-index', '4');
 				if (MmxPlayer) MmxPlayer.destroy();
 				clearInterval(Tmr); VidHandler = null;
-			}, 1400);
+			}, 1000);
 		};
 	}
 };
