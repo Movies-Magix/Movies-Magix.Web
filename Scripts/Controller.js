@@ -743,8 +743,7 @@ class PlayerHandler
 	constructor()
 	{
 		var Exec = false, Tmr = 0, TOutMM = 0, CastPnlActive = false, PIval = 0, LoggerPaused = false,
-		MmxPlayer = null, IsPsdBefore = true, InPos = '',
-		SyncedTM = 0, HlsMgr = null, MovRes = [], HlsErr = false;
+		MmxPlayer = null, IsPsdBefore = true, InPos = '', SyncedTM = 0, HlsMgr = null, MovRes = [], HlsErr = false;
 
 		var SetPinger = function()
 		{
@@ -845,7 +844,7 @@ class PlayerHandler
 				storage: { enabled: true, key: "Plyr" },
 				listeners:
 				{
-					fullscreen: function ()
+					fullscreen: function()
 					{
 						if (MmxPlayer.fullscreen.active)
 						{
@@ -898,7 +897,7 @@ class PlayerHandler
 						}
 					});
 				}
-				else VidCtrl.attr('src', BuildUri(ResTarget + '.mp4', MObj.At, `${Catg}-${MObj.In}`));
+				else DisplayPopup('Browser Error', 'Sorry you might be using outdated browser please upgrage your browser to enjoy fast and low latency movies streaming over HLS technology.', 'Okay', 2);
 			});
 
 			MmxPlayer.once('loadedmetadata', () =>
