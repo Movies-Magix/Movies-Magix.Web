@@ -495,6 +495,7 @@ function StopAnimation()
 
 function BuildCatBox(CatName)
 {
+        if (CatName == "Kids") return; // [To-Do] Remove
 	let CatReadable = CatName.replace(/-/g, ' ');
 	var CatgBX = $('<div/>', { class: 'cat', onclick: 'LoadPg(2, \'' + CatName + '\');' }),
 	CtImg = $('<img/>', { alt: CatName + ' Poster Image', src: 'Images/' + CatName + '_Pic.jpg' }),
