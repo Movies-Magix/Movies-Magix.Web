@@ -1150,7 +1150,8 @@ function AlterTheme(ThemeCode, IsSave = true)
 	}
 }
 
+// To-Do remove static data as subdomain
 var Normalize = (Name = '') => DeSanitize(Name).replace(/ /g, '-');
-var BuildUri = (Res, At, In) => location.origin.replace('://', `://s3-${At}.`) + `/${encodeURIComponent(Res)}?${In.toLowerCase()}`;
+var BuildUri = (Res, At, In) => location.origin.replace('://', `://s3-${"data" ?? At}.`) + `/${encodeURIComponent(Res)}?${In.toLowerCase()}`;
 
 // #endregion Utilities
